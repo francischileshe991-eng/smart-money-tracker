@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Smart Money Tracker",
+    "slug": "smart-money-tracker",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "smartmoneytracker",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F4F6F3",
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1B4332",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "server",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#1B4332",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 128
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}

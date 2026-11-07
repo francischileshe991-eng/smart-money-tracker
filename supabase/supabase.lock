@@ -1,0 +1,320 @@
+{
+  "$schema": "https://supabase.com/docs/cli/supabase-lock/v1.schema.json",
+  "linked": {
+    "branch": {
+      "isDefault": true,
+      "ref": "wbgzgjzlmoplqfddebze"
+    },
+    "observedAt": "2026-11-07T18:42:28.139Z",
+    "project": "wbgzgjzlmoplqfddebze"
+  },
+  "lockfileVersion": 1,
+  "services": {
+    "analytics": {
+      "resolution": "unobserved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/analytics:v1.50.15-r1@sha256:2b03ec3120effe5d33c1e2ec4570a932fb60ce6a6851b4920a22388b4e8356c1",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "abfc9ba64e354129e8f8b0f38b43747a5dab48785fd3593d11e52cd6e0ff37bf",
+            "manifest": "60647643f5521089978dc20c6966b86ed939b9751b187cbb70e0de3fbd2479ac"
+          },
+          "linux-amd64": {
+            "archive": "7652456c1a1d73ac6fe10853bd8a38e79139b43fe796caec5725a3d0f225a3d8",
+            "manifest": "6c465af69e26ce8a9c15988d5dcbbae069e9a92b697962bfa86c4f3e601b8409"
+          },
+          "linux-arm64": {
+            "archive": "a75625d7c903d70e749b5ee776e2c5c98d51ee60ff92b28bb6684121fe0f3888",
+            "manifest": "ca2569304cf24e6abd4242b55dd0d20338f40532fbe6377a9accdc5d47ea47ab"
+          }
+        },
+        "revision": 1,
+        "upstreamImage": "supabase/logflare:1.50.15",
+        "upstreamVersion": "v1.50.15"
+      },
+      "specifier": "linked"
+    },
+    "auth": {
+      "linked": {
+        "raw": "v2.197.0",
+        "version": "v2.197.0"
+      },
+      "resolution": "resolved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/auth:v2.197.0-r0@sha256:7eb303831d170865840dbb3f9018b48561c988704ad1d9a2bafabb4e93e92da5",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "eb365c4aea1e1cd04998ed16cd49b1b90e6a097ce633e5ee55f8bbbebdd349c7",
+            "manifest": "178f748da1c886b07945a67a839d3a17fa546e01215a90329ded1a634831deb6"
+          },
+          "linux-amd64": {
+            "archive": "bd8f59ed1a817014afe71288c2275ad0396630f016f8cb5ab5129388860ec49b",
+            "manifest": "ccad45ee54edf7506b055b85dcebee6db8c5b9ec57ac3c6d30baf38bb81b1deb"
+          },
+          "linux-arm64": {
+            "archive": "9598a8dd5a08707f65795505211c479b686c54e3dadbe64b3e1989855215cf0c",
+            "manifest": "4f5f3a6284f0b161cf49a201fe551470d5b6e0e2b37dedb4dacdd0e42abaf3b1"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "supabase/gotrue:v2.197.0",
+        "upstreamVersion": "v2.197.0"
+      },
+      "specifier": "linked"
+    },
+    "database": {
+      "line": "stock",
+      "linked": {
+        "raw": "17.11.0.018",
+        "version": "17.11.0.018"
+      },
+      "majorVersion": 17,
+      "resolution": "resolved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/postgres:17.11.0.018-r0@sha256:4f5cf9d03718b200df8c8e4735081eaa55a74d11dca848f5c8283203921e5751",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "5033846ff2dc56a992e9bf929d62d132bd2819656e040d4a359632121a9722e7",
+            "manifest": "9e6d77b467111e6b6dd822ebf5b100214ca5837b563556e97227b93332ae87ce"
+          },
+          "linux-amd64": {
+            "archive": "80c80a56481e65491eaafe1609eedafe0b35ee2ff10773adfb9ab34e5ebfa8c5",
+            "manifest": "56c4b951f5dd16870fca927e221c2c289d23bd42514027594fab13ede672d9b1"
+          },
+          "linux-arm64": {
+            "archive": "e066fcea166bf302ba24779d32ff22150905860fe7fb067c415cff7efe7e5f3e",
+            "manifest": "42883bbb35d4f165706eabc4bf66002636eb500ea1ff55915c539e970f768339"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "supabase/postgres:17.11.0.018",
+        "upstreamVersion": "17.11.0.018"
+      },
+      "specifier": "linked"
+    },
+    "functions": {
+      "resolution": "unobserved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/edge-runtime:v1.77.9-r0@sha256:1d2d920e96fe72bdff308f855a30a60a51baf4d9c3b396c16b36eb193daf6f61",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "d2d14cadc53254416c1ecc89dd0575efd4733cb72025ff97495d3a87980acf39",
+            "manifest": "1d4ae4b525a5b6f5729e811664dbfdf60bb9bc453a5e71abf6947253c20563b0"
+          },
+          "linux-amd64": {
+            "archive": "d61748740756c192d83b2d5e6960bc20e2eb748fd7aee7620bfd4bf5854013b6",
+            "manifest": "a25c0f4e9bfaa1583314906e1cb0ce06b5ac0a78f349e2db5f08a1ed669ce85e"
+          },
+          "linux-arm64": {
+            "archive": "5e247316b1965f84d8748de0da92e4c8d2af20d6d5e6dccdf5da35e7e0dfbff4",
+            "manifest": "8e259a40d00950f311082b89517ebc04323d3c8106432c88f64e59f61c5c860e"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "supabase/edge-runtime:v1.77.9",
+        "upstreamVersion": "v1.77.9"
+      },
+      "specifier": "linked"
+    },
+    "imgproxy": {
+      "resolution": "unobserved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/imgproxy:v3.26.0-r0@sha256:5871582cf6c5140d3b50b21e0d1aa236fdf46ee6133e3bfec1baf63545e01cf0",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "1f82084b056bf4806bf492bca0b6f963068d07a6776a2a122b61da940732683b",
+            "manifest": "53b5c4f4f069db88c3919571dbee12af2373e5c90db291cf5d7456aa74e17ecb"
+          },
+          "linux-amd64": {
+            "archive": "7865edf054b8217c2daf9d42bce6bebe34f83df5c4183fbbe6495a3603dcd4a8",
+            "manifest": "5ae7f22a6fbdc55f41ffc3334747a3475295676699ac1d2c372bc5fe2ad239bb"
+          },
+          "linux-arm64": {
+            "archive": "4528fd7877c9df3052cd6ec06c8cafd7e92977dd26490fb532964c19faec3b0a",
+            "manifest": "5420e6d9b3661060b2dedfe157c18b56f22011c43cc3127031b4bbc65e936b59"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "ghcr.io/imgproxy/imgproxy:v3.26.0",
+        "upstreamVersion": "v3.26.0"
+      },
+      "specifier": "linked"
+    },
+    "mail": {
+      "resolution": "unobserved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/mailpit:v1.31.3-r0@sha256:ed9b00c609e77e99c79b93f1178255ebc271868920f2c69a8d166bd5634ed10d",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "d460a6a55693a2a321ad83ebb83417b8078324751a744f982bb3512da0632712",
+            "manifest": "43177dc88b6f625bec6d98096e39c10f4cd10956081df01b5b7cebeeae47766a"
+          },
+          "linux-amd64": {
+            "archive": "57e39cb39b2288313e26abe9ae9300f6af9332abd1f76f4d67be533741b2c942",
+            "manifest": "36595519f40e406b17a0ce6e21f153400f217ae24b0365f0a5c495ff315b9f82"
+          },
+          "linux-arm64": {
+            "archive": "805b09d9008e9be2c6c9230e668bd2c6ab446eeae26389e91732f9e20b2c3f5f",
+            "manifest": "973b76700a5a865243bd5a5c36664121ed99c538d58633921cc8fd7c675e655c"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "axllent/mailpit:v1.31.3",
+        "upstreamVersion": "v1.31.3"
+      },
+      "specifier": "linked"
+    },
+    "pgmeta": {
+      "resolution": "unobserved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/pgmeta:v0.100.0-r0@sha256:1dc3ce4f710e9696ec1374f89d0dc84291104c9a1ce030f9ac999670d4d74a08",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "adecdf5168a9e43056d4e3d78122960b3f645607f6b64e7e178522ad8ca7f3e4",
+            "manifest": "edf539c9a613c4f0d2d4ccf5d245c8fd57b60d158bcc7c24a18f343236529c69"
+          },
+          "linux-amd64": {
+            "archive": "5df0dfb03469f358858b8768f39db9a77b5947ec0567aff1056fddbfa1f2db75",
+            "manifest": "3095c4655e8f35451fdb84194065a31c4edee9b52fd5b28ac01dfdae620e07a1"
+          },
+          "linux-arm64": {
+            "archive": "8289012110b6b466d8366ceb2e6f731eca9b46020046b585438f988615666a22",
+            "manifest": "349d37edae9ac07d15543e7acf5bae288112850285dee28c602cd6c04ea11c1a"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "supabase/postgres-meta:v0.100.0",
+        "upstreamVersion": "v0.100.0"
+      },
+      "specifier": "linked"
+    },
+    "pooler": {
+      "resolution": "unobserved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/pooler:v2.9.13-r1@sha256:f02ccc6e18ea77789978e248ac302a4e0955d03fdeeea0d63ac0b7a315595c60",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "aa53594e91144a6d33267b802152f0f42d35ca85e6efd13b9cd06f53e327fb5f",
+            "manifest": "1c42764f1f706cb177ee4f066c6ebcb75e15a2399e8f552488a426718d9e2edd"
+          },
+          "linux-amd64": {
+            "archive": "ff1543cebb9331646294475c609c3e231618e46f1dca53108d35f3172c1fa705",
+            "manifest": "1ef9f8041632ca0c96045f64092c880a3ad7a6af4febe7d0b43322b330fc19f8"
+          },
+          "linux-arm64": {
+            "archive": "ed08b8856a0516026321a47055fca5c30cea82f93dc3da8bb2ab81951342a20c",
+            "manifest": "12e867a370fac6aa68f1e657840d30c9d4e5cae56f38da833a26e05c688c94ad"
+          }
+        },
+        "revision": 1,
+        "upstreamImage": "supabase/supavisor:2.9.13",
+        "upstreamVersion": "v2.9.13"
+      },
+      "specifier": "linked"
+    },
+    "realtime": {
+      "resolution": "unobserved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/realtime:v2.151.3-r0@sha256:7dfbc7b200b4c426bc069c5b736581a71d2606383ff84bc0d9f29c1b0fd8d413",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "6616f3c45dbf25200e59b12d989ab2a2e97513e87561f7a5c45eea56aa3cd9e6",
+            "manifest": "44f950a123047828103d1955eb9e389e862f1159d429359958c10af04495ce6c"
+          },
+          "linux-amd64": {
+            "archive": "bf8cc9c184b2702273153ff1897ae890f75301727a586eaf13baedb856ad8198",
+            "manifest": "3a5dded73d9f80ee30c378717e532f397c100debe65218925fb76c6d954811fc"
+          },
+          "linux-arm64": {
+            "archive": "4f752db9845d4621126974025b2942ac6440c7af0515212b6285cc6f4734e3fc",
+            "manifest": "8bb1e37ffc611d38cc95eb21adbd1e712efd941e930bba5bad1bfe1b5cb7124a"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "supabase/realtime:v2.151.3",
+        "upstreamVersion": "v2.151.3"
+      },
+      "specifier": "linked"
+    },
+    "rest": {
+      "linked": {
+        "raw": "14.18",
+        "version": "v14.18"
+      },
+      "resolution": "unpublished",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/postgrest:v16.5-r0@sha256:11421115f972012e05e515bbb28df07f38cb7a966b8da251d2d1d3e5b34527cd",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "554fd826083c9d1e384aa39dc3bc5d56f17c4a90e1088b6e821a9c7b9f15567b",
+            "manifest": "20469b7dd05d6edb1abe2e8074531e3558604bca335056e2946c0ee7d2ec69c9"
+          },
+          "linux-amd64": {
+            "archive": "e224ec6209a4ff800524c54e3b11715ede07aa3923154e44e97a67bb786b6417",
+            "manifest": "644809d3e7912ef4c1273e848e0a0b52b8c353b909c1b63e95eb7c3d6413f12b"
+          },
+          "linux-arm64": {
+            "archive": "89cddaa3a08cd252ea24a28ae3acf13d74e572cb57b721cfe70743de266e9028",
+            "manifest": "8097ef1fa2036d6dd735488a4aac82b0f128483171672d0a4662c48a045149a8"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "postgrest/postgrest:v16.5",
+        "upstreamVersion": "v16.5"
+      },
+      "specifier": "linked"
+    },
+    "storage": {
+      "linked": {
+        "raw": "1.89.13",
+        "version": "v1.89.13"
+      },
+      "resolution": "resolved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/storage:v1.89.13-r0@sha256:678ba7e01e2a78b391d420ef4908c04c45cf24ef9720992f430fc243a5ea8a5e",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "09563b55694f7f971d0fa5454a478576145276bcb050bcfaf3a2afbe6fa0e891",
+            "manifest": "ef9290064d57b817f1a5b4b7ab01bea4057fcee6e5837081e7df54551367e02b"
+          },
+          "linux-amd64": {
+            "archive": "fce4b4373a20817c5ecbe602a59db527ade3da4627ccc7e0bca76406d8d79f6d",
+            "manifest": "c6c2b974c112060070c3740ee08d8d517a5d612eba1ae378cf05c852393fb9e0"
+          },
+          "linux-arm64": {
+            "archive": "a7ea980eb3158aed0cff6b1fd93fc8808136a54100f06dd3aad963ecde5928ee",
+            "manifest": "3edd38c64b9c8bc2afcc8e43c24f37d041e0f7e2dab8483f99958a36cf52d664"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "supabase/storage-api:v1.89.13",
+        "upstreamVersion": "v1.89.13"
+      },
+      "specifier": "linked"
+    },
+    "studio": {
+      "resolution": "unobserved",
+      "resolved": {
+        "image": "ghcr.io/supabase/cli/studio:2026.11.02-sha-a05e7ec-r0@sha256:1f52c2b338efac7ea4dc8717073c952d34956e1c9252052b1c1e3b9ce58c6158",
+        "natives": {
+          "darwin-arm64": {
+            "archive": "f1b1968ad29622e5f03091bf1088d3e9901d681887b65a04d7e69c0e22dc3765",
+            "manifest": "88bbba67d77a30812ac4a776e64e7d8e90a301fa5e09543679cf88bfdeae859c"
+          },
+          "linux-amd64": {
+            "archive": "90fa37ba2a3feced841d776c5ec5267beb6bcd4805ad87dbb60991e839ea1563",
+            "manifest": "74b5a15a9ec239f9b03aa4a8bebfd231031f5bf8eac8794352d7b0ba40a5d55c"
+          },
+          "linux-arm64": {
+            "archive": "ca61f893e5ac4db123a8d2a662a45d4648c9543030cb8be240d90744dae45aa9",
+            "manifest": "cbbe733372e43c045c94ef7134e1fb362921e3e165341acf3511492e624469b5"
+          }
+        },
+        "revision": 0,
+        "upstreamImage": "supabase/studio:2026.11.02-sha-a05e7ec",
+        "upstreamVersion": "2026.11.02-sha-a05e7ec"
+      },
+      "specifier": "linked"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+project_id = "smart-money-tracker"
+
+[experimental]
+stack = true
+
+[auth]
+enabled = true
+site_url = "http://localhost:8081/auth"
+additional_redirect_urls = [
+  "smartmoneytracker://auth",
+  "smartmoneytracker://reset-password",
+  "http://localhost:8081/auth",
+  "http://localhost:8081/reset-password",
+]
+enable_signup = true
+
+[auth.email]
+enabled = true
+enable_confirmations = false
