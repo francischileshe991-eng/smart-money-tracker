@@ -16,6 +16,8 @@ The app uses a database RPC to save each signed-in user's finance snapshot in on
 
 The pgTAP isolation test lives at `supabase/tests/rls_isolation_test.sql`. Run it against a local Supabase database with `supabase start` and `supabase test db`. It creates two auth users, authenticates as each, and checks read, insert, update, and delete isolation.
 
+The hosted project has also been checked with an equivalent temporary two-user REST isolation run covering profiles, accounts, transactions, budgets, savings goals, and contributions. The temporary users were deleted afterward.
+
 ## Current limits
 
 - A Supabase project and its credentials are required before registration and cloud persistence can work. Each developer supplies their own `.env`; the repository contains no project URL or keys.

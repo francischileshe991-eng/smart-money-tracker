@@ -224,11 +224,15 @@ rows expose a combined accessibility label rather than raw visual fragments.
   - transaction search, filtering, and sorting;
   - transaction validation rejection rules (missing amount/description/date,
     unknown accounts, identical transfer accounts, and mismatched categories).
+- Live two-user RLS isolation check against the hosted Supabase project:
+  reads, inserts, updates, and deletes were denied across profiles, accounts,
+  transactions, budgets, savings goals, and goal contributions; the snapshot RPC
+  only touched the caller's data. Temporary test users were removed afterward.
 
 ## Deferred work
 
-- Connecting a live Supabase project, applying migrations, configuring auth
-  redirect URLs, and running the database isolation suite (see `docs/SUPABASE.md`).
+- Running the pgTAP database suite locally (Docker is not available in this
+  environment); the equivalent live two-user isolation check has passed.
 - Multi-device conflict resolution: snapshot persistence is transactional, but
   concurrent edits are last-write-wins.
 - Dark mode and additional accessibility audits on physical devices.
