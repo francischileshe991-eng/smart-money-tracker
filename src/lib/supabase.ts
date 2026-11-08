@@ -14,7 +14,9 @@ export const supabase = supabaseConfigured
         ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : {}),
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: Platform.OS === 'web',
+        flowType: 'pkce',
+        // The auth provider handles both native and web callbacks once.
+        detectSessionInUrl: false,
       },
     })
   : null;

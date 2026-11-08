@@ -9,20 +9,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { colors, layout, spacing } from '@/theme';
+import { layout, spacing, useThemeColors } from '@/theme';
 
 type ScreenProps = {
   children: ReactNode;
   scroll?: boolean;
   contentContainerStyle?: StyleProp<ViewStyle>;
+  keyboardAware?: boolean;
 };
 
-export function Screen({ children, scroll = true, contentContainerStyle }: ScreenProps) {
+export function Screen({ children, scroll = true, contentContainerStyle, keyboardAware = false }: ScreenProps) {
+  const colors = useThemeColors();
   return (
-    <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
+    <SafeAreaView edges={['top', 'left', 'right']} style={[styles.safeArea, { backgroundColor: colors.background }]}>
       {scroll ? (
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
+          automaticallyAdjustKeyboardInsets={keyboardAware}
           contentContainerStyle={[styles.content, contentContainerStyle]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -38,7 +41,6 @@ export function Screen({ children, scroll = true, contentContainerStyle }: Scree
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: colors.background,
     flex: 1,
   },
   content: {

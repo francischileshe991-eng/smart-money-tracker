@@ -2,11 +2,12 @@
 
 ## Status
 
-Phase 8 (Supabase backend and authentication) is implemented in the repository;
-connecting a Supabase project and running the database isolation suite remain setup steps.
+Phases 8 and 9 (Supabase authentication, offline-first finance data, and
+revision-checked synchronization) are implemented in the repository. Connecting a
+Supabase project and applying migrations remain setup steps.
 
 - Five-tab navigation: Home, Transactions, Add, Budgets, Profile.
-- Light-first design system with reusable components.
+- Minimal design system with neutral surfaces, restrained colour, and reusable components.
 - Dashboard with total available balance, monthly income/expense summaries,
   quick actions, budget overview, savings progress and recent transactions.
 - Full transaction management: income, expenses, and inter-account transfers with
@@ -17,6 +18,8 @@ connecting a Supabase project and running the database isolation suite remain se
 - Supabase Auth with persisted mobile sessions and guarded app routes.
 - User-owned PostgreSQL finance records with RLS, relational ownership constraints,
   and transactionally saved finance snapshots.
+- Expo SQLite cache for native finance data, with an AsyncStorage adapter on web;
+  pending snapshots synchronize after connectivity returns.
 - Multi-account management for cash, bank, MTN Mobile Money, Airtel Money, and
   other accounts, including account history, archive/restore, and transfers.
 - Branding: application name, forest-green palette, app icon and splash screen.
@@ -51,14 +54,18 @@ in `src/theme/tokens.ts`. Screens and components consume tokens through:
 This keeps the interface consistent and makes future theme changes a token change
 rather than a screen-by-screen rewrite.
 
-### 2. Light-first interface
+### 2. Appearance
 
-The app is designed for a light interface (`userInterfaceStyle: "light"` in
-`app.json`). The palette uses white surfaces on a light grey background with deep
-forest green as the primary brand colour. Income is green and expenses are red.
+The app supports light and dark themes, selected in Profile and persisted on the
+device. Light mode uses white surfaces and dark text; dark mode uses charcoal
+surfaces. Forest green is the main action colour. Red is reserved for negative
+summaries, errors, and destructive actions; ordinary expense rows use dark text
+and a minus sign. Transaction lists use thin dividers rather than individual
+cards, and card surfaces have no drop shadows.
 
-Dark mode was not required in Phase 1. If it is added later, tokens are already
-centralised, but semantic colour names should be audited for contrast.
+Home uses a plain balance, a two-column month summary, and recent activity.
+Transaction entry uses an underlined amount field and a text tab selector.
+Screen titles use direct labels without promotional subtitles.
 
 ### 3. Navigation
 
@@ -99,6 +106,18 @@ by the add screen and the edit route.
 
 - The form supports income, expense, and transfer transactions with amount,
   description, category, date, account, and optional notes.
+- Quick entry starts with the amount, four frequently used category shortcuts,
+  and the account. All categories remain available through an expand control.
+  Date defaults to today; description, date, and notes are available under details
+  (expanded by default while editing). Blank descriptions use the category name
+  or "Account transfer" before validation.
+- The last account used to create a transaction is remembered on the device per
+  user. Explicit source-account links take precedence for transfers; archived or
+  deleted preferences fall back to an active account. Adding another transaction
+  keeps the current account selection.
+- A draggable floating calculator is available across the signed-in app. Its
+  button stays at 18% opacity while idle, becomes opaque on touch, and fades
+  again after interaction.
 - Transfer source and destination accounts must differ, and transfers never count
   as income or expenses.
 - Pure validation lives in `src/utils/transaction-validation.ts`
@@ -142,6 +161,27 @@ sessions are persisted using the Expo-compatible React Native storage adapter.
 The Profile screen can clear the authenticated user's cloud finance records. This
 action is confirmed and cannot be undone.
 
+A separate password-confirmed Delete account action calls the `delete-account`
+Edge Function. The server validates the bearer token and password, uses only the
+verified user's ID, and hard-deletes the Auth account. Foreign keys remove their
+finance/profile rows. Device writes are drained and blocked before clearing the
+local snapshot so a late sync cannot restore deleted cached data.
+
+### Offline storage and synchronization
+
+`FinanceProvider` treats each user's complete finance snapshot as the local source
+of truth while the app is running. Native platforms persist it in Expo SQLite;
+web uses the platform AsyncStorage adapter. Transactions, accounts, budgets, and
+savings data are cached together so balance and budget totals remain derived from
+the same snapshot offline.
+
+Every edit marks the snapshot pending and writes it locally before upload. Network
+state changes trigger retries. Transaction IDs remain stable across retries, and
+the Supabase RPC replaces the snapshot in one database transaction, preventing
+partial writes or duplicate transaction inserts. A per-user cloud revision
+detects simultaneous edits. When revisions differ, users choose the local or
+cloud snapshot; the app does not silently discard either copy.
+
 ### 7. Dashboard composition
 
 The home screen is composed from provider-derived aggregates:
@@ -156,11 +196,15 @@ The home screen is composed from provider-derived aggregates:
   transaction choices.
 - Accounts referenced by transactions cannot be deleted; archiving preserves their
   financial history.
-- `BudgetOverviewCard` is shared by the dashboard and the budgets screen, so both
-  report identical totals.
+- Home prioritizes the available balance, expense entry, monthly income and
+  expenses, and the four most recent transactions by date. A balance dialog
+  explains the included accounts and that savings goals are tracked separately.
+- Compact budget and savings links lead to their full management screens. Budget
+  warnings take priority in the Home summary; new users are prompted to add an
+  account before recording transactions.
 - Savings goals and contribution history are stored per user in PostgreSQL and
   loaded through the finance repository.
-- The monthly net shown in the balance card is a display-only subtraction of the
+- The monthly net shown in the month summary is a display-only subtraction of the
   two integer monthly totals.
 
 All dashboard amounts are integers in ngwee and are formatted only at render time.
@@ -169,8 +213,8 @@ All dashboard amounts are integers in ngwee and are formatted only at render tim
 
 - Screens use `SafeAreaView` and a shared `Screen` wrapper.
 - Content is capped at 720 dp and centred, which keeps forms readable on tablets.
-- Quick actions use `flexWrap` with a minimum width, so three columns collapse
-  gracefully on narrow Android devices (for example 320 dp wide).
+- Income and transfer actions use `flexWrap` with a minimum width, so they stack
+  on narrow devices or when labels need more space.
 - Long lists use `FlatList`; dashboard content uses `ScrollView`.
 - Text uses `numberOfLines` and flexible containers to prevent horizontal
   overflow. No fixed screen-width assumptions are used.
@@ -233,7 +277,5 @@ rows expose a combined accessibility label rather than raw visual fragments.
 
 - Running the pgTAP database suite locally (Docker is not available in this
   environment); the equivalent live two-user isolation check has passed.
-- Multi-device conflict resolution: snapshot persistence is transactional, but
-  concurrent edits are last-write-wins.
 - Dark mode and additional accessibility audits on physical devices.
 - Recurring transactions, reminders, and data import/export.

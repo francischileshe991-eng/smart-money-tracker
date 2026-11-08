@@ -15,7 +15,7 @@ import { ScreenHeader } from '@/components/ui/screen-header';
 import { TextField } from '@/components/ui/text-field';
 import { EXPENSE_CATEGORIES, INCOME_CATEGORIES } from '@/data/categories';
 import { useFinance } from '@/providers/finance-provider';
-import { colors, radii, spacing } from '@/theme';
+import { radii, spacing, useThemeColors } from '@/theme';
 import type { Category, Transaction } from '@/types/finance';
 import { todayIso } from '@/utils/date';
 import {
@@ -92,6 +92,7 @@ type DateFilterFieldProps = {
 };
 
 function DateFilterField({ label, value, onChange }: DateFilterFieldProps) {
+  const colors = useThemeColors();
   return (
     <View style={styles.dateFilterField}>
       <View style={styles.dateFilterHeader}>
@@ -120,7 +121,7 @@ function DateFilterField({ label, value, onChange }: DateFilterFieldProps) {
           accessibilityLabel={`Set ${label.toLowerCase()}`}
           accessibilityRole="button"
           onPress={() => onChange(todayIso())}
-          style={({ pressed }) => [styles.anyDateButton, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.anyDateButton, { backgroundColor: colors.surfaceAlt, borderColor: colors.border }, pressed && styles.pressed]}
         >
           <Icon name="calendar" size={18} color="textMuted" />
           <AppText variant="body" color="textMuted" style={styles.anyDateText}>
@@ -136,6 +137,7 @@ function DateFilterField({ label, value, onChange }: DateFilterFieldProps) {
 }
 
 export default function TransactionsScreen() {
+  const colors = useThemeColors();
   const { allAccounts, transactions } = useFinance();
   const [query, setQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<TransactionTypeFilter>('all');
@@ -226,13 +228,15 @@ export default function TransactionsScreen() {
             action={
               hasActiveFilters ? (
                 <Button label="Clear filters" onPress={clearAllFilters} variant="secondary" />
-              ) : undefined
+              ) : (
+                <Button icon="add" label="Add transaction" onPress={() => router.navigate('/add')} />
+              )
             }
             icon={hasActiveFilters ? 'search' : 'transactions'}
             message={
               hasActiveFilters
                 ? 'Try a different search term, category, date range or transaction type.'
-                : 'Income, expenses and transfers you add will appear here.'
+                : 'Add income, spending or a transfer to start your history.'
             }
             title={hasActiveFilters ? 'No matching transactions' : 'No transactions yet'}
           />
@@ -250,7 +254,6 @@ export default function TransactionsScreen() {
                   variant="secondary"
                 />
               }
-              subtitle="Search, filter and review your activity"
               title="Transactions"
             />
 
@@ -420,7 +423,7 @@ export default function TransactionsScreen() {
               }}
               style={({ pressed }) => [
                 styles.sortOption,
-                active && styles.sortOptionActive,
+                active && { backgroundColor: colors.primarySoft, borderColor: colors.primarySoft },
                 pressed && styles.pressed,
               ]}
             >
@@ -493,8 +496,6 @@ const styles = StyleSheet.create({
   },
   anyDateButton: {
     alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
-    borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
     flexDirection: 'row',
@@ -510,16 +511,11 @@ const styles = StyleSheet.create({
   },
   sortOption: {
     alignItems: 'center',
-    borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.md,
     padding: spacing.md,
-  },
-  sortOptionActive: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primarySoft,
   },
   sortText: {
     flex: 1,

@@ -1,9 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
-
 import { spacing } from '@/theme';
 import type { BudgetWithSpending } from '@/types/finance';
 import { formatMoney, percentageOf } from '@/utils/currency';
@@ -12,57 +10,40 @@ type BudgetOverviewCardProps = {
   budgets: BudgetWithSpending[];
 };
 
-/**
- * Total budget allocation and usage. Shared by the dashboard and the budgets
- * screen so both always report the same integer-based totals.
- */
+/** Summary of spending across the periods configured on the supplied budgets. */
 export function BudgetOverviewCard({ budgets }: BudgetOverviewCardProps) {
   const totalLimitMinor = budgets.reduce((total, budget) => total + budget.limitMinor, 0);
   const totalSpentMinor = budgets.reduce((total, budget) => total + budget.spentMinor, 0);
-  const totalRemainingMinor = totalLimitMinor - totalSpentMinor;
-  const progress = percentageOf(totalSpentMinor, totalLimitMinor);
-  const isOverBudget = totalSpentMinor > totalLimitMinor;
+  const remainingMinor = totalLimitMinor - totalSpentMinor;
+  const isOverBudget = remainingMinor < 0;
+  const includesCustomPeriods = budgets.some((budget) => budget.period === 'custom');
 
   return (
-    <Card style={styles.card} tone="primary">
-      <AppText variant="label" color="primaryMuted">
-        Monthly budget
-      </AppText>
-      <AppText variant="display" color="textInverse">
+    <View style={styles.summary}>
+      <AppText color="textSecondary">Budgeted spending</AppText>
+      <AppText variant="display" style={styles.amount} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
         {formatMoney(totalSpentMinor)}
       </AppText>
-      <AppText variant="body" color="primaryMuted">
-        of {formatMoney(totalLimitMinor)} across {budgets.length} categories
-      </AppText>
-
-      <View style={styles.progressWrap}>
-        <ProgressBar progress={progress} tone={isOverBudget ? 'expense' : 'income'} />
+      <AppText variant="caption" color="textSecondary">of {formatMoney(totalLimitMinor)} allocated</AppText>
+      <View style={styles.progress}>
+        <ProgressBar size="sm" progress={percentageOf(totalSpentMinor, totalLimitMinor)} tone={isOverBudget ? 'expense' : 'primary'} />
       </View>
-
       <View style={styles.footer}>
-        <AppText variant="caption" color="primaryMuted">
-          {progress}% used
+        <AppText variant="caption" color={isOverBudget ? 'expense' : 'textSecondary'}>
+          {formatMoney(Math.abs(remainingMinor))} {isOverBudget ? 'over budget' : 'left'}
         </AppText>
-        <AppText variant="captionStrong" color="primaryMuted">
-          {isOverBudget
-            ? `${formatMoney(Math.abs(totalRemainingMinor))} over budget`
-            : `${formatMoney(totalRemainingMinor)} remaining`}
+        <AppText variant="caption" color="textSecondary">
+          {budgets.length} {budgets.length === 1 ? 'category' : 'categories'}
         </AppText>
       </View>
-    </Card>
+      {includesCustomPeriods ? <AppText variant="caption" color="textMuted">Includes custom budget periods</AppText> : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    gap: spacing.xs,
-  },
-  progressWrap: {
-    marginTop: spacing.lg,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.xs,
-  },
+  summary: { gap: spacing.sm, paddingVertical: spacing.lg },
+  amount: { fontSize: 38, lineHeight: 48, fontWeight: '500', letterSpacing: -1 },
+  progress: { marginTop: spacing.lg },
+  footer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: spacing.sm },
 });

@@ -11,7 +11,7 @@ import { Screen } from '@/components/ui/screen';
 import { ScreenHeader } from '@/components/ui/screen-header';
 import { SectionHeader } from '@/components/ui/section-header';
 import { useFinance } from '@/providers/finance-provider';
-import { colors, spacing } from '@/theme';
+import { spacing, useThemeColors } from '@/theme';
 import type { Transaction } from '@/types/finance';
 import { formatMoney } from '@/utils/currency';
 import { todayIso } from '@/utils/date';
@@ -43,10 +43,12 @@ function sumType(transactions: Transaction[], type: 'income' | 'expense'): numbe
 }
 
 function Bar({ value, max, color }: { value: number; max: number; color: string }) {
-  return <View style={styles.track}><View style={[styles.bar, { backgroundColor: color, width: `${max > 0 ? Math.max(value > 0 ? 2 : 0, Math.min(100, (value / max) * 100)) : 0}%` }]} /></View>;
+  const colors = useThemeColors();
+  return <View style={[styles.track, { backgroundColor: colors.surfaceAlt }]}><View style={[styles.bar, { backgroundColor: color, width: `${max > 0 ? Math.max(value > 0 ? 2 : 0, Math.min(100, (value / max) * 100)) : 0}%` }]} /></View>;
 }
 
 export default function AnalyticsScreen() {
+  const colors = useThemeColors();
   const { transactions, budgets, savingsGoals } = useFinance();
   const today = todayIso();
   const [range, setRange] = useState<Range>('month');
@@ -100,15 +102,15 @@ export default function AnalyticsScreen() {
   return (
     <Screen>
       <BackLink />
-      <ScreenHeader subtitle="Understand your income, spending, and savings" title="Analytics" />
+      <ScreenHeader title="Analytics" />
       <View style={styles.chips}>
         {([['month', 'This month'], ['3months', '3 months'], ['6months', '6 months'], ['custom', 'Custom']] as const).map(([value, label]) => <Chip key={value} label={label} active={range === value} onPress={() => setRange(value)} />)}
       </View>
       {range === 'custom' ? <Card style={styles.dateCard}><DateField label="From" value={customFrom} onChange={setCustomFrom} /><DateField label="To" value={customTo} onChange={setCustomTo} />{customFrom > customTo ? <AppText variant="caption" color="expense">Start date must be on or before end date.</AppText> : null}</Card> : null}
       {!hasFinancialData || from > to ? <EmptyState icon="transactions" title="No financial activity" message={from > to ? 'Choose a date range where the start comes before the end.' : 'Income and expense transactions in this period will appear in your reports.'} /> : <>
-        <View style={styles.summary}><Card style={styles.summaryCard}><AppText variant="caption" color="textMuted">Income</AppText><AppText variant="amountSmall" style={styles.income}>{formatMoney(incomeTotal)}</AppText></Card><Card style={styles.summaryCard}><AppText variant="caption" color="textMuted">Expenses</AppText><AppText variant="amountSmall" style={styles.expense}>{formatMoney(expenseTotal)}</AppText></Card></View>
+        <View style={styles.summary}><Card style={styles.summaryCard}><AppText variant="caption" color="textMuted">Income</AppText><AppText variant="amountSmall" style={[styles.income, { color: colors.income }]}>{formatMoney(incomeTotal)}</AppText></Card><Card style={styles.summaryCard}><AppText variant="caption" color="textMuted">Expenses</AppText><AppText variant="amountSmall" style={[styles.expense, { color: colors.expense }]}>{formatMoney(expenseTotal)}</AppText></Card></View>
         <Card style={styles.insightCard}><AppText variant="h3">Period insights</AppText><AppText variant="body">{categoryTotals[0] ? `Highest spending category: ${categoryTotals[0].category} (${formatMoney(categoryTotals[0].total)}).` : 'No expenses recorded in this period.'}</AppText><AppText variant="body" color="textSecondary">{spendingChange === null ? 'No previous-period spending to compare.' : `Spending ${Math.abs(spendingChange)}% ${spendingChange > 0 ? 'higher' : spendingChange < 0 ? 'lower' : 'unchanged'} than the previous period.`}</AppText><AppText variant="body" color="textSecondary">{budgets.length ? `Current month budgets: ${budgetUsage}% utilised (${formatMoney(budgetSpent)} of ${formatMoney(budgetLimit)}).` : 'Set category budgets to see budget utilisation insights.'}</AppText><AppText variant="body" color="textSecondary">{savingsTarget > 0 ? `Savings progress: ${Math.min(100, Math.round((savingsTotal / savingsTarget) * 100))}% (${formatMoney(savingsTotal)} of ${formatMoney(savingsTarget)}).` : 'Create a savings goal to track savings progress.'}</AppText></Card>
-        <SectionHeader title="Income vs expenses" /><Card style={styles.chartCard}><View style={styles.legend}><AppText variant="captionStrong" style={styles.income}>Income</AppText><AppText variant="captionStrong" style={styles.expense}>Expenses</AppText></View>{months.map((month) => <View key={month.key} style={styles.monthRow}><AppText variant="caption" color="textSecondary" style={styles.monthLabel}>{month.label}</AppText><View style={styles.monthBars}><Bar color={colors.income} max={maxMonth} value={month.income} /><Bar color={colors.expense} max={maxMonth} value={month.expense} /></View></View>)}<View style={styles.chartTotals}><AppText variant="caption" color="textMuted">Income {formatMoney(incomeTotal)}</AppText><AppText variant="caption" color="textMuted">Expenses {formatMoney(expenseTotal)}</AppText></View></Card>
+        <SectionHeader title="Income vs expenses" /><Card style={styles.chartCard}><View style={styles.legend}><AppText variant="captionStrong" style={[styles.income, { color: colors.income }]}>Income</AppText><AppText variant="captionStrong" style={[styles.expense, { color: colors.expense }]}>Expenses</AppText></View>{months.map((month) => <View key={month.key} style={styles.monthRow}><AppText variant="caption" color="textSecondary" style={styles.monthLabel}>{month.label}</AppText><View style={styles.monthBars}><Bar color={colors.income} max={maxMonth} value={month.income} /><Bar color={colors.expense} max={maxMonth} value={month.expense} /></View></View>)}<View style={[styles.chartTotals, { borderTopColor: colors.border }]}><AppText variant="caption" color="textMuted">Income {formatMoney(incomeTotal)}</AppText><AppText variant="caption" color="textMuted">Expenses {formatMoney(expenseTotal)}</AppText></View></Card>
         <SectionHeader title="Spending by category" /><Card style={styles.chartCard}>{categoryTotals.length ? categoryTotals.map((item) => <View key={item.category} style={styles.categoryRow}><View style={styles.categoryHeading}><AppText variant="captionStrong">{item.category}</AppText><AppText variant="caption" color="textSecondary">{formatMoney(item.total)}</AppText></View><Bar color={colors.expense} max={maxCategory} value={item.total} /></View>) : <AppText variant="body" color="textMuted">No expenses to break down for these dates.</AppText>}</Card>
         <SectionHeader title="Savings progress" /><Card style={styles.chartCard}>{savingsGoals.length ? savingsGoals.map((goal) => <View key={goal.id} style={styles.categoryRow}><View style={styles.categoryHeading}><AppText variant="captionStrong">{goal.name}</AppText><AppText variant="caption" color="textSecondary">{formatMoney(goal.contributedMinor)} / {formatMoney(goal.targetMinor)}</AppText></View><Bar color={colors.primary} max={goal.targetMinor} value={goal.contributedMinor} /></View>) : <AppText variant="body" color="textMuted">Create a savings goal to see progress here.</AppText>}</Card>
       </>}
@@ -122,17 +124,17 @@ const styles = StyleSheet.create({
   dateCard: { gap: spacing.md, marginBottom: spacing.md },
   summary: { flexDirection: 'row', gap: spacing.sm },
   summaryCard: { flex: 1, gap: spacing.xs, minWidth: 0 },
-  income: { color: colors.income },
-  expense: { color: colors.expense },
+  income: {},
+  expense: {},
   insightCard: { gap: spacing.md, marginTop: spacing.md },
   chartCard: { gap: spacing.md },
   legend: { flexDirection: 'row', gap: spacing.lg, justifyContent: 'flex-end' },
   monthRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.md },
   monthLabel: { width: 34 },
   monthBars: { flex: 1, gap: spacing.xs },
-  track: { backgroundColor: colors.surfaceAlt, borderRadius: 4, height: 8, overflow: 'hidden', width: '100%' },
+  track: { borderRadius: 4, height: 8, overflow: 'hidden', width: '100%' },
   bar: { borderRadius: 4, height: '100%' },
-  chartTotals: { borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingTop: spacing.md },
+  chartTotals: { borderTopWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingTop: spacing.md },
   categoryRow: { gap: spacing.xs },
   categoryHeading: { flexDirection: 'row', justifyContent: 'space-between' },
   rangeLabel: { marginTop: spacing.xl },

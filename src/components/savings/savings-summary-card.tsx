@@ -6,7 +6,7 @@ import { AppText } from '@/components/ui/app-text';
 import { Card } from '@/components/ui/card';
 import { ProgressBar } from '@/components/ui/progress-bar';
 
-import { colors, radii, spacing } from '@/theme';
+import { radii, spacing, useThemeColors } from '@/theme';
 import type { SavingsGoal } from '@/types/finance';
 import { formatMoney, percentageOf } from '@/utils/currency';
 
@@ -21,6 +21,7 @@ export function SavingsSummaryCard({
   contributedMinor,
   targetMinor,
 }: SavingsSummaryCardProps) {
+  const colors = useThemeColors();
   const progress = percentageOf(contributedMinor, targetMinor);
 
   return (
@@ -37,7 +38,7 @@ export function SavingsSummaryCard({
           </AppText>
         </View>
 
-        <View style={styles.percentBadge}>
+        <View style={[styles.percentBadge, { backgroundColor: colors.primarySoft }]}>
           <AppText variant="captionStrong" color="primary">
             {progress}%
           </AppText>
@@ -47,7 +48,7 @@ export function SavingsSummaryCard({
       <ProgressBar progress={progress} tone={progress >= 100 ? 'income' : 'primary'} />
 
       {goals.length > 0 ? (
-        <View style={styles.goals}>
+          <View style={[styles.goals, { borderTopColor: colors.border }]}>
           {goals.map((goal) => (
             <SavingsGoalProgress goal={goal} key={goal.id} />
           ))}
@@ -77,7 +78,6 @@ const styles = StyleSheet.create({
   },
   percentBadge: {
     alignItems: 'center',
-    backgroundColor: colors.primarySoft,
     borderRadius: radii.pill,
     justifyContent: 'center',
     minHeight: 34,
@@ -85,7 +85,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
   },
   goals: {
-    borderTopColor: colors.border,
     borderTopWidth: 1,
     gap: spacing.lg,
     paddingTop: spacing.lg,

@@ -1,276 +1,206 @@
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { BudgetOverviewCard } from '@/components/budgets/budget-overview-card';
-import { SavingsSummaryCard } from '@/components/savings/savings-summary-card';
+import { ProfileAvatar } from '@/components/profile-avatar';
+import { SyncStatusBanner } from '@/components/sync/sync-status-banner';
 import { TransactionList } from '@/components/transactions/transaction-list';
 import { AppText } from '@/components/ui/app-text';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Icon, type IconName } from '@/components/ui/icon';
+import { Icon } from '@/components/ui/icon';
+import { Modal } from '@/components/ui/modal';
 import { Screen } from '@/components/ui/screen';
 import { SectionHeader } from '@/components/ui/section-header';
-import { StatCard } from '@/components/ui/stat-card';
-import { SAMPLE_PROFILE } from '@/data/profile';
+import { useAuth } from '@/providers/auth-provider';
 import { useFinance } from '@/providers/finance-provider';
-import { colors, radii, spacing } from '@/theme';
+import { radii, spacing, useThemeColors } from '@/theme';
 import { formatMoney, formatSignedMoney } from '@/utils/currency';
 import { currentMonthLabel } from '@/utils/date';
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
-
-  if (hour < 12) {
-    return 'Good morning';
-  }
-
-  if (hour < 17) {
-    return 'Good afternoon';
-  }
-
-  return 'Good evening';
-}
-
-type QuickActionProps = {
-  label: string;
-  icon: IconName;
-  onPress: () => void;
-};
-
-function QuickAction({ label, icon, onPress }: QuickActionProps) {
+function OverviewLink({ title, detail, href }: {
+  title: string; detail: string; href: Href;
+}) {
+  const colors = useThemeColors();
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.quickAction, pressed && styles.pressed]}
+      accessibilityLabel={`${title}. ${detail}`}
+      onPress={() => router.navigate(href)}
+      style={({ pressed }) => [styles.overviewLink, { borderColor: colors.border }, pressed && styles.pressed]}
     >
-      <View style={styles.quickActionIcon}>
-        <Icon name={icon} size={21} color="primary" />
+      <View style={styles.linkText}>
+        <AppText variant="bodyStrong">{title}</AppText>
+        <AppText variant="caption" color="textSecondary">{detail}</AppText>
       </View>
-      <AppText variant="captionStrong" color="textSecondary" style={styles.quickActionLabel}>
-        {label}
-      </AppText>
+      <Icon name="chevronRight" color="textMuted" size={16} />
     </Pressable>
   );
 }
 
 export default function HomeScreen() {
+  const colors = useThemeColors();
+  const { user } = useAuth();
   const {
-    budgets,
-    monthlyExpenseMinor,
-    monthlyIncomeMinor,
-    savingsContributedMinor,
-    savingsGoals,
-    savingsTargetMinor,
-    totalBalanceMinor,
-    transactions,
+    accounts, allAccounts, budgets, monthlyExpenseMinor, monthlyIncomeMinor,
+    savingsGoals, totalBalanceMinor, transactions,
   } = useFinance();
-
+  const [balanceDetailsVisible, setBalanceDetailsVisible] = useState(false);
   const monthLabel = currentMonthLabel();
+  const profileName = String(user?.user_metadata?.full_name ?? user?.email?.split('@')[0] ?? 'there');
   const monthlyNetMinor = monthlyIncomeMinor - monthlyExpenseMinor;
-  const recentTransactions = transactions.slice(0, 4);
+  const recentTransactions = useMemo(
+    () => [...transactions].sort((left, right) => right.date.localeCompare(left.date)).slice(0, 4),
+    [transactions]
+  );
+  const budgetNeedingAttention = budgets.find((budget) => budget.warning === 'over')
+    ?? budgets.find((budget) => budget.warning === 'near');
+  const budgetDetail = budgetNeedingAttention
+    ? `${budgetNeedingAttention.category}: ${budgetNeedingAttention.remainingMinor < 0
+      ? `${formatMoney(-budgetNeedingAttention.remainingMinor)} over budget`
+      : `${formatMoney(budgetNeedingAttention.remainingMinor)} left`}`
+    : budgets.length ? `${budgets.length} active ${budgets.length === 1 ? 'budget' : 'budgets'}` : 'No budgets set';
+  const activeGoals = savingsGoals.filter((goal) => !goal.completed);
+  const savingsDetail = activeGoals.length
+    ? `${activeGoals.length} ${activeGoals.length === 1 ? 'goal' : 'goals'} in progress`
+    : 'No active goals';
 
   return (
     <Screen>
+      <SyncStatusBanner />
       <View style={styles.header}>
-        <View style={styles.headerText}>
-          <AppText variant="label" color="textMuted" style={styles.greeting}>
-            {getGreeting()}, {SAMPLE_PROFILE.firstName}
-          </AppText>
-          <AppText variant="h1">My finances</AppText>
+        <View style={styles.linkText}>
+          <AppText variant="h1">Your money. Made clear.</AppText>
+          <AppText variant="caption" color="textSecondary">{monthLabel} {new Date().getFullYear()}</AppText>
         </View>
-
         <Pressable
           accessibilityLabel="Open profile"
           accessibilityRole="button"
           onPress={() => router.navigate('/profile')}
           style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}
         >
-          <AppText variant="bodyStrong" color="primary">
-            {SAMPLE_PROFILE.initials}
-          </AppText>
+          <ProfileAvatar name={profileName} size={44} />
         </Pressable>
       </View>
 
-      <Card style={styles.balanceCard} tone="primary">
-        <AppText variant="label" color="primaryMuted">
-          Total available balance
-        </AppText>
-        <AppText variant="display" color="textInverse" style={styles.balanceAmount}>
-          {formatMoney(totalBalanceMinor)}
-        </AppText>
-        <AppText variant="body" color="primaryMuted">
-          Across all your accounts
-        </AppText>
+      {accounts.length === 0 ? (
+        <Card style={styles.welcomeCard}>
+          <AppText variant="h2">{allAccounts.length ? 'No active accounts' : 'Add an account'}</AppText>
+          <AppText color="textSecondary">
+            {allAccounts.length
+              ? 'Restore an archived account or add a new one to start recording transactions.'
+              : 'Add your cash, bank or mobile money account and its current balance.'}
+          </AppText>
+          <Button label={allAccounts.length ? 'Manage accounts' : 'Add account'}
+            onPress={() => router.navigate(allAccounts.length ? '/accounts' : '/accounts/manage')} />
+        </Card>
+      ) : (
+        <>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Available balance ${formatMoney(totalBalanceMinor)}. See account breakdown.`}
+            onPress={() => setBalanceDetailsVisible(true)}
+            style={({ pressed }) => pressed && styles.pressed}
+          >
+            <View style={styles.balanceCard}>
+              <AppText variant="body" color="textSecondary">Available balance</AppText>
+              <AppText variant="display" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.55} style={styles.balanceAmount}>
+                {formatMoney(totalBalanceMinor)}
+              </AppText>
+              <View style={styles.row}>
+                <AppText color="textSecondary" variant="caption">
+                  {accounts.length} {accounts.length === 1 ? 'account' : 'accounts'}
+                </AppText>
+                <Icon name="chevronRight" color="textMuted" size={14} />
+              </View>
+            </View>
+          </Pressable>
+          <View style={styles.actions}>
+            <Button label="Expense" accessibilityLabel="Add expense" variant="outline" style={styles.action}
+              onPress={() => router.navigate({ pathname: '/add', params: { type: 'expense' } })} />
+              <Button label="Income" variant="outline" style={styles.action}
+                onPress={() => router.navigate({ pathname: '/add', params: { type: 'income' } })} />
+              <Button label="Transfer" variant="outline" style={styles.action}
+                onPress={() => router.navigate({ pathname: '/add', params: { type: 'transfer' } })} />
+          </View>
+        </>
+      )}
 
-        <View style={styles.balanceFooter}>
-          <AppText variant="caption" color="primaryMuted">
-            {monthLabel} net
-          </AppText>
-          <AppText variant="captionStrong" color="textInverse">
-            {formatSignedMoney(monthlyNetMinor, monthlyNetMinor >= 0 ? 'income' : 'expense')}
-          </AppText>
+      <SectionHeader title="This month" actionLabel="Analytics" onAction={() => router.navigate('/analytics')} />
+      <View style={[styles.monthCard, { borderColor: colors.border }]}>
+        <View style={styles.monthStat}>
+          <AppText variant="caption" color="textSecondary">Income</AppText>
+          <AppText variant="amountSmall" color="income">{formatMoney(monthlyIncomeMinor)}</AppText>
         </View>
-      </Card>
-
-      <View style={styles.summaryRow}>
-        <StatCard
-          caption={`${monthLabel} total`}
-          icon="income"
-          label="Income"
-          tone="income"
-          value={formatMoney(monthlyIncomeMinor)}
-        />
-        <StatCard
-          caption={`${monthLabel} total`}
-          icon="expense"
-          label="Expenses"
-          tone="expense"
-          value={formatMoney(monthlyExpenseMinor)}
-        />
+        <View style={[styles.monthStat, styles.expenseStat, { borderLeftColor: colors.border }]}>
+          <AppText variant="caption" color="textSecondary">Expenses</AppText>
+          <AppText variant="amountSmall">{formatMoney(monthlyExpenseMinor)}</AppText>
+        </View>
+      </View>
+      <View style={styles.netRow}>
+        <AppText variant="caption" color="textSecondary">Net</AppText>
+        <AppText variant="caption" color={monthlyNetMinor < 0 ? 'expense' : 'textSecondary'}>
+          {formatSignedMoney(monthlyNetMinor, monthlyNetMinor >= 0 ? 'income' : 'expense')}
+        </AppText>
       </View>
 
-      <SectionHeader title="Quick actions" />
-
-      <View style={styles.quickActions}>
-        <QuickAction
-          icon="expense"
-          label="Add expense"
-          onPress={() => router.navigate({ pathname: '/add', params: { type: 'expense' } })}
-        />
-        <QuickAction
-          icon="income"
-          label="Add income"
-          onPress={() => router.navigate({ pathname: '/add', params: { type: 'income' } })}
-        />
-        <QuickAction
-          icon="transfer"
-          label="Transfer"
-          onPress={() => router.navigate({ pathname: '/add', params: { type: 'transfer' } })}
-        />
-        <QuickAction
-          icon="wallet"
-          label="Accounts"
-          onPress={() => router.navigate('/accounts')}
-        />
-        <QuickAction
-          icon="budgets"
-          label="Budgets"
-          onPress={() => router.navigate('/budgets')}
-        />
-        <QuickAction
-          icon="transactions"
-          label="Analytics"
-          onPress={() => router.navigate('/analytics')}
-        />
-      </View>
-
-      <SectionHeader
-        actionLabel="See all"
-        onAction={() => router.navigate('/budgets')}
-        title="Budget overview"
-      />
-
-      <BudgetOverviewCard budgets={budgets} />
-
-      <SectionHeader actionLabel="Manage" onAction={() => router.navigate('/savings')} title="Savings goals" />
-
-      <SavingsSummaryCard
-        contributedMinor={savingsContributedMinor}
-        goals={savingsGoals}
-        targetMinor={savingsTargetMinor}
-      />
-
-      <SectionHeader
-        actionLabel="See all"
-        onAction={() => router.navigate('/transactions')}
-        title="Recent transactions"
-      />
-
+      <SectionHeader title="Recent activity" actionLabel="See all" onAction={() => router.navigate('/transactions')} />
       <TransactionList
-        onSelect={(transaction) =>
-          router.navigate({ pathname: '/transaction/[id]', params: { id: transaction.id } })
-        }
+        emptyAction={<Button label={accounts.length ? 'Add expense' : 'Add an account'}
+          onPress={() => router.navigate(accounts.length ? '/add' : '/accounts/manage')} />}
+        emptyMessage="Your income, expenses and transfers will appear here."
+        onSelect={(transaction) => router.navigate({ pathname: '/transaction/[id]', params: { id: transaction.id } })}
         transactions={recentTransactions}
       />
+
+      <SectionHeader title="Manage" />
+      <View>
+        <OverviewLink title="Budgets" detail={budgetDetail} href="/budgets" />
+        <OverviewLink title="Savings goals" detail={savingsDetail} href="/savings" />
+        <OverviewLink title="Accounts" detail={`${accounts.length} active ${accounts.length === 1 ? 'account' : 'accounts'}`} href="/accounts" />
+      </View>
+
+      <Modal visible={balanceDetailsVisible} onClose={() => setBalanceDetailsVisible(false)} title="Account balances"
+        actions={<Button fullWidth label="Manage accounts" onPress={() => {
+          setBalanceDetailsVisible(false);
+          router.navigate('/accounts');
+        }} />}>
+        {accounts.map((account) => (
+          <View key={account.id} style={styles.row}>
+            <AppText style={styles.linkText}>{account.name}</AppText>
+            <AppText variant="bodyStrong">{formatMoney(account.balanceMinor)}</AppText>
+          </View>
+        ))}
+        <View style={[styles.row, styles.monthNet, { borderTopColor: colors.border }]}>
+          <AppText variant="bodyStrong">Available balance</AppText>
+          <AppText variant="bodyStrong">{formatMoney(totalBalanceMinor)}</AppText>
+        </View>
+        <AppText variant="caption" color="textSecondary">
+          Each balance includes the opening balance and recorded transactions. Archived accounts are excluded.
+        </AppText>
+        <AppText variant="caption" color="textSecondary">
+          Savings goals track progress separately and do not reduce this balance.
+        </AppText>
+      </Modal>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    gap: spacing.md,
-    justifyContent: 'space-between',
-    marginBottom: spacing.xl,
-  },
-  headerText: {
-    flex: 1,
-    gap: spacing.xs,
-  },
-  greeting: {
-    textTransform: 'uppercase',
-  },
-  avatar: {
-    alignItems: 'center',
-    backgroundColor: colors.primarySoft,
-    borderRadius: radii.pill,
-    height: 44,
-    justifyContent: 'center',
-    width: 44,
-  },
-  balanceCard: {
-    gap: spacing.xs,
-    padding: spacing.xl,
-  },
-  balanceAmount: {
-    marginBottom: spacing.xs,
-    marginTop: spacing.xs,
-  },
-  balanceFooter: {
-    borderTopColor: 'rgba(255, 255, 255, 0.18)',
-    borderTopWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.lg,
-    paddingTop: spacing.md,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.md,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-  },
-  quickAction: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    flexBasis: 84,
-    flexGrow: 1,
-    gap: spacing.sm,
-    justifyContent: 'center',
-    minHeight: 92,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.md,
-  },
-  quickActionIcon: {
-    alignItems: 'center',
-    backgroundColor: colors.primarySoft,
-    borderRadius: radii.pill,
-    height: 38,
-    justifyContent: 'center',
-    width: 38,
-  },
-  quickActionLabel: {
-    textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
+  header: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, marginBottom: spacing.huge },
+  linkText: { flex: 1, gap: spacing.xs, minWidth: 0 },
+  avatar: { alignItems: 'center', borderRadius: radii.pill, minHeight: 44, minWidth: 44, justifyContent: 'center' },
+  balanceCard: { gap: spacing.sm, paddingVertical: spacing.sm },
+  balanceAmount: { fontSize: 42, lineHeight: 52, fontWeight: '500', letterSpacing: -1.4, fontVariant: ['tabular-nums'] },
+  row: { alignItems: 'center', flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between' },
+  monthCard: { flexDirection: 'row', flexWrap: 'wrap', borderTopWidth: 1, borderBottomWidth: 1, paddingVertical: spacing.lg, rowGap: spacing.md },
+  monthStat: { flexBasis: 130, flexGrow: 1, gap: spacing.sm },
+  expenseStat: { borderLeftWidth: 1, paddingLeft: spacing.lg },
+  netRow: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: spacing.md },
+  monthNet: { borderTopWidth: 1, paddingTop: spacing.md },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginTop: spacing.xxl },
+  action: { flexGrow: 1, flexBasis: 72, paddingHorizontal: spacing.md },
+  welcomeCard: { gap: spacing.md },
+  overviewLink: { alignItems: 'center', flexDirection: 'row', gap: spacing.md, minHeight: 72, paddingVertical: spacing.lg, borderBottomWidth: 1 },
+  pressed: { opacity: 0.75 },
 });

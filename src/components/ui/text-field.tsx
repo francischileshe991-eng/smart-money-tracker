@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 import {
   StyleSheet,
   TextInput,
   View,
   type StyleProp,
   type TextInputProps,
+  type TextInputInstance,
   type ViewStyle,
 } from 'react-native';
 
 import { AppText } from './app-text';
 import { Icon, type IconName } from './icon';
 
-import { colors, radii, spacing } from '@/theme';
+import { radii, spacing, useThemeColors } from '@/theme';
 
 export type TextFieldProps = TextInputProps & {
   label?: string;
@@ -20,6 +21,9 @@ export type TextFieldProps = TextInputProps & {
   leadingIcon?: IconName;
   trailingText?: string;
   containerStyle?: StyleProp<ViewStyle>;
+  variant?: 'outlined' | 'underlined';
+  inputRef?: Ref<TextInputInstance>;
+  trailingAction?: ReactNode;
 };
 
 export function TextField({
@@ -29,6 +33,9 @@ export function TextField({
   leadingIcon,
   trailingText,
   containerStyle,
+  variant = 'outlined',
+  inputRef,
+  trailingAction,
   style,
   multiline,
   onFocus,
@@ -36,6 +43,7 @@ export function TextField({
   ...rest
 }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
+  const colors = useThemeColors();
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -48,14 +56,17 @@ export function TextField({
       <View
         style={[
           styles.field,
+          { backgroundColor: colors.surface, borderColor: colors.border },
+          variant === 'underlined' && styles.underlined,
           multiline && styles.multilineField,
-          focused && styles.focused,
-          error ? styles.errored : null,
+          focused && { borderColor: colors.primary },
+          error ? { borderColor: colors.expense } : null,
         ]}
       >
         {leadingIcon ? <Icon name={leadingIcon} size={18} color="textMuted" /> : null}
 
         <TextInput
+          ref={inputRef}
           accessibilityLabel={label}
           placeholderTextColor={colors.textMuted}
           selectionColor={colors.primary}
@@ -69,7 +80,7 @@ export function TextField({
             setFocused(false);
             onBlur?.(event);
           }}
-          style={[styles.input, multiline && styles.multilineInput, style]}
+          style={[styles.input, { color: colors.text }, multiline && styles.multilineInput, style]}
         />
 
         {trailingText ? (
@@ -77,10 +88,11 @@ export function TextField({
             {trailingText}
           </AppText>
         ) : null}
+        {trailingAction}
       </View>
 
       {error ? (
-        <AppText variant="caption" color="expense">
+        <AppText variant="caption" color="expense" accessibilityLiveRegion="polite">
           {error}
         </AppText>
       ) : hint ? (
@@ -98,8 +110,6 @@ const styles = StyleSheet.create({
   },
   field: {
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
     flexDirection: 'row',
@@ -111,14 +121,14 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: spacing.md,
   },
-  focused: {
-    borderColor: colors.primary,
-  },
-  errored: {
-    borderColor: colors.expense,
+  underlined: {
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    borderWidth: 0,
+    borderBottomWidth: 1,
+    paddingHorizontal: 0,
   },
   input: {
-    color: colors.text,
     flex: 1,
     fontSize: 15,
     lineHeight: 20,

@@ -20,7 +20,6 @@ export default function AddTransactionScreen() {
   return (
     <Screen>
       <ScreenHeader
-        subtitle="Record money coming in, going out, or moving between accounts"
         title="Add transaction"
       />
       <TransactionForm

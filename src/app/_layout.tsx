@@ -1,53 +1,64 @@
-import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DefaultTheme, Stack, ThemeProvider as NavigationThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { View } from 'react-native';
 
 import { FinanceProvider, useFinance } from '@/providers/finance-provider';
-import { colors } from '@/theme';
+import { AppThemeProvider, useAppTheme, useThemeColors } from '@/theme';
 import { AuthProvider, useAuth } from '@/providers/auth-provider';
 import { AppText } from '@/components/ui/app-text';
 import { Screen } from '@/components/ui/screen';
 import { Button } from '@/components/ui/button';
-import { View } from 'react-native';
+import { CalculatorFab } from '@/components/calculator-fab';
 import type { ReactNode } from 'react';
 
-const navigationTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: colors.primary,
-    background: colors.background,
-    card: colors.surface,
-    text: colors.text,
-    border: colors.border,
-    notification: colors.expense,
-  },
-};
-
 export default function RootLayout() {
+  return <AppThemeProvider><ThemedRootLayout /></AppThemeProvider>;
+}
+
+function ThemedRootLayout() {
+  const colors = useThemeColors();
+  const { ready } = useAppTheme();
+  const navigationTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      primary: colors.primary,
+      background: colors.background,
+      card: colors.surface,
+      text: colors.text,
+      border: colors.border,
+      notification: colors.expense,
+    },
+  };
+  if (!ready) return <View style={{ backgroundColor: colors.background, flex: 1 }} />;
   return (
-    <ThemeProvider value={navigationTheme}>
+    <NavigationThemeProvider value={navigationTheme}>
       <AuthProvider><RootNavigator /></AuthProvider>
-    </ThemeProvider>
+    </NavigationThemeProvider>
   );
 }
 
 function RootNavigator() {
-  const { session, loading } = useAuth();
+  const colors = useThemeColors();
+  const { mode } = useAppTheme();
+  const { session, loading, passwordRecovery } = useAuth();
   if (loading) return <Screen><AppText>Loading your secure session…</AppText></Screen>;
   const navigator = <Stack screenOptions={{ contentStyle: { backgroundColor: colors.background }, headerShown: false }}>
-      <Stack.Protected guard={Boolean(session)}>
+      <Stack.Protected guard={Boolean(session) && !passwordRecovery}>
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="accounts" />
         <Stack.Screen name="transaction/[id]" />
         <Stack.Screen name="savings" />
         <Stack.Screen name="analytics" />
+      </Stack.Protected>
+      <Stack.Protected guard={Boolean(session)}>
         <Stack.Screen name="reset-password" />
       </Stack.Protected>
       <Stack.Protected guard={!session}>
         <Stack.Screen name="auth" />
       </Stack.Protected>
     </Stack>;
-  return <><StatusBar style="dark" />{session ? <FinanceProvider><AuthenticatedApp>{navigator}</AuthenticatedApp></FinanceProvider> : navigator}</>;
+  return <><StatusBar style={mode === 'dark' ? 'light' : 'dark'} /><View style={{ backgroundColor: colors.background, flex: 1 }}>{session && !passwordRecovery ? <FinanceProvider><AuthenticatedApp>{navigator}</AuthenticatedApp></FinanceProvider> : navigator}{session && !passwordRecovery ? <CalculatorFab /> : null}</View></>;
 }
 
 function AuthenticatedApp({ children }: { children: ReactNode }) {

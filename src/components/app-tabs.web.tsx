@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppText } from '@/components/ui/app-text';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { APP_TABS } from '@/navigation/tabs';
-import { colors, layout, radii, spacing } from '@/theme';
+import { layout, radii, spacing, useThemeColors } from '@/theme';
 
 export default function AppTabs() {
   return (
@@ -66,12 +66,14 @@ function TabButton({ children, isFocused, ref, icon, ...props }: TabButtonProps)
 
 function CustomTabList({ children, style, ...props }: TabListProps) {
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
 
   return (
     <View
       {...props}
       style={[
         styles.bar,
+        { backgroundColor: colors.surface, borderTopColor: colors.border },
         { paddingBottom: Math.max(insets.bottom, spacing.sm) },
         style,
       ]}
@@ -86,8 +88,6 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   bar: {
-    backgroundColor: colors.surface,
-    borderTopColor: colors.border,
     borderTopWidth: 1,
     bottom: 0,
     left: 0,

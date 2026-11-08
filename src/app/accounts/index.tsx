@@ -12,11 +12,12 @@ import { ScreenHeader } from '@/components/ui/screen-header';
 import { SectionHeader } from '@/components/ui/section-header';
 import { accountTypeLabel } from '@/data/accounts';
 import { useFinance } from '@/providers/finance-provider';
-import { colors, radii, spacing } from '@/theme';
+import { radii, spacing, useThemeColors } from '@/theme';
 import type { AccountWithBalance } from '@/types/finance';
 import { formatMoney } from '@/utils/currency';
 
 function AccountRow({ account }: { account: AccountWithBalance }) {
+  const colors = useThemeColors();
   return (
     <Pressable
       accessibilityLabel={`${account.name}, ${accountTypeLabel(account.type)}, ${formatMoney(
@@ -26,9 +27,9 @@ function AccountRow({ account }: { account: AccountWithBalance }) {
       onPress={() =>
         router.navigate({ pathname: '/accounts/[id]', params: { id: account.id } })
       }
-      style={({ pressed }) => [styles.accountRow, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.accountRow, pressed && { backgroundColor: colors.surfaceAlt }]}
     >
-      <View style={styles.accountIcon}>
+      <View style={[styles.accountIcon, { backgroundColor: colors.primarySoft }]}>
         <Icon
           name={
             account.type === 'cash'
@@ -60,6 +61,7 @@ function AccountRow({ account }: { account: AccountWithBalance }) {
 }
 
 export default function AccountsScreen() {
+  const colors = useThemeColors();
   const { accounts, allAccounts, totalBalanceMinor } = useFinance();
   const archivedAccounts = allAccounts.filter((account) => account.archived);
 
@@ -75,7 +77,6 @@ export default function AccountsScreen() {
             size="sm"
           />
         }
-        subtitle="Manage balances across cash, banks and mobile money"
         title="Accounts"
       />
 
@@ -96,7 +97,7 @@ export default function AccountsScreen() {
         <Card padded={false} style={styles.accountList}>
           {accounts.map((account, index) => (
             <View key={account.id}>
-              {index > 0 ? <View style={styles.divider} /> : null}
+              {index > 0 ? <View style={[styles.divider, { backgroundColor: colors.border }]} /> : null}
               <AccountRow account={account} />
             </View>
           ))}
@@ -121,7 +122,7 @@ export default function AccountsScreen() {
           <Card padded={false} style={styles.accountList}>
             {archivedAccounts.map((account, index) => (
               <View key={account.id}>
-                {index > 0 ? <View style={styles.divider} /> : null}
+              {index > 0 ? <View style={[styles.divider, { backgroundColor: colors.border }]} /> : null}
                 <AccountRow account={account} />
               </View>
             ))}
@@ -151,7 +152,6 @@ const styles = StyleSheet.create({
   },
   accountIcon: {
     alignItems: 'center',
-    backgroundColor: colors.primarySoft,
     borderRadius: radii.md,
     height: 42,
     justifyContent: 'center',
@@ -167,11 +167,9 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   divider: {
-    backgroundColor: colors.border,
     height: 1,
     marginLeft: spacing.lg + 42 + spacing.md,
   },
   pressed: {
-    backgroundColor: colors.surfaceAlt,
   },
 });

@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { BudgetOverviewCard } from '@/components/budgets/budget-overview-card';
 import { BudgetRow } from '@/components/budgets/budget-row';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Chip } from '@/components/ui/chip';
 import { Modal } from '@/components/ui/modal';
 import { Screen } from '@/components/ui/screen';
@@ -14,12 +13,13 @@ import { SectionHeader } from '@/components/ui/section-header';
 import { TextField } from '@/components/ui/text-field';
 import { EXPENSE_CATEGORIES } from '@/data/categories';
 import { useFinance } from '@/providers/finance-provider';
-import { colors, spacing } from '@/theme';
+import { spacing, useThemeColors } from '@/theme';
 import type { Budget, ExpenseCategory } from '@/types/finance';
 import { formatAmountInput, formatMoney, parseAmountToMinor } from '@/utils/currency';
 import { isValidIsoDate, todayIso } from '@/utils/date';
 
 export default function BudgetsScreen() {
+  const colors = useThemeColors();
   const { budgets, transactions, saveBudget, deleteBudget } = useFinance();
   const [editing, setEditing] = useState<Budget | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -95,15 +95,20 @@ export default function BudgetsScreen() {
 
   return (
     <Screen>
-      <ScreenHeader subtitle="Set limits and keep spending on track" title="Budgets" />
-      <BudgetOverviewCard budgets={budgets} />
-      <SectionHeader title="Categories" actionLabel="Add budget" onAction={openNew} />
-      {budgets.length ? <View style={styles.list}>{budgets.map((budget) => <BudgetRow budget={budget} key={budget.id} onPress={() => openEdit(budget)} />)}</View> : <Card><AppText variant="body" color="textSecondary">Create your first category budget to start tracking spending.</AppText><Button label="Create budget" onPress={openNew} style={styles.createButton} /></Card>}
-      <SectionHeader title="Spending history" />
-      <Card style={styles.history}>
-        <AppText variant="caption" color="textMuted">All qualifying expenses, by month</AppText>
-        {history.map((item) => <View key={item.month} style={styles.historyRow}><AppText variant="bodyStrong">{item.month}</AppText><AppText variant="bodyStrong">{formatMoney(item.total)}</AppText></View>)}
-      </Card>
+      <ScreenHeader title="Budgets" right={budgets.length ? <Button label="Add budget" onPress={openNew} variant="outline" size="sm" /> : undefined} />
+      {budgets.length ? <>
+        <BudgetOverviewCard budgets={budgets} />
+        <SectionHeader title="Categories" />
+        <View>{budgets.map((budget) => <BudgetRow budget={budget} key={budget.id} onPress={() => openEdit(budget)} />)}</View>
+      </> : <View style={styles.emptyState}>
+        <AppText variant="h2">No budgets yet</AppText>
+        <AppText color="textSecondary">Set a spending limit for a category.</AppText>
+        <Button label="Add budget" onPress={openNew} variant="outline" style={styles.createButton} />
+      </View>}
+      <SectionHeader title="Monthly spending" />
+      <View>
+        {history.map((item) => <View key={item.month} style={[styles.historyRow, { borderBottomColor: colors.border }]}><AppText color="textSecondary">{item.month}</AppText><AppText variant="bodyStrong">{formatMoney(item.total)}</AppText></View>)}
+      </View>
       <Modal
         actions={
           confirmingDelete ? (
@@ -128,9 +133,22 @@ export default function BudgetsScreen() {
           <AppText variant="body" color="textSecondary">{editing?.category} budget</AppText>
         ) : (
           <>
-            <View style={styles.formGroup}><AppText variant="label" color="textSecondary">CATEGORY</AppText><View style={styles.chips}>{EXPENSE_CATEGORIES.map((item) => <Chip key={item} label={item} active={category === item} onPress={() => setCategory(item)} />)}</View></View>
-            <TextField label="Spending limit" keyboardType="decimal-pad" onChangeText={setAmount} placeholder="0.00" trailingText="ZMW" value={amount} />
-            <View style={styles.formGroup}><AppText variant="label" color="textSecondary">BUDGET PERIOD</AppText><View style={styles.chips}><Chip label="Monthly" active={period === 'monthly'} onPress={() => setPeriod('monthly')} /><Chip label="Custom dates" active={period === 'custom'} onPress={() => setPeriod('custom')} /></View></View>
+            <TextField label="Spending limit" variant="underlined" style={styles.amountInput} keyboardType="decimal-pad" onChangeText={setAmount} placeholder="0.00" trailingText="ZMW" value={amount} />
+            <View style={styles.formGroup}><AppText variant="label" color="textSecondary">Category</AppText><View style={styles.chips}>{EXPENSE_CATEGORIES.map((item) => <Chip key={item} label={item} active={category === item} onPress={() => setCategory(item)} />)}</View></View>
+            <View style={styles.formGroup}>
+              <AppText variant="label" color="textSecondary">Period</AppText>
+              <View style={[styles.periodTabs, { borderBottomColor: colors.border }]}>
+                {(['monthly', 'custom'] as const).map((option) => <Pressable key={option}
+                  accessibilityRole="button" accessibilityState={{ selected: period === option }}
+                  onPress={() => setPeriod(option)}
+                  style={({ pressed }) => [styles.periodTab,
+                    { borderBottomColor: period === option ? colors.text : 'transparent' }, pressed && styles.pressed]}>
+                  <AppText variant={period === option ? 'bodyStrong' : 'body'} color={period === option ? 'text' : 'textSecondary'}>
+                    {option === 'monthly' ? 'Monthly' : 'Custom dates'}
+                  </AppText>
+                </Pressable>)}
+              </View>
+            </View>
             {period === 'custom' ? <><TextField label="Start date" onChangeText={setStartDate} placeholder="YYYY-MM-DD" value={startDate} /><TextField label="End date" onChangeText={setEndDate} placeholder="YYYY-MM-DD" value={endDate} /></> : null}
             <TextField label="Warn me at" keyboardType="number-pad" onChangeText={setThreshold} trailingText="% used" value={threshold} />
             {error ? <AppText variant="caption" color="expense">{error}</AppText> : null}
@@ -143,9 +161,12 @@ export default function BudgetsScreen() {
 }
 
 const styles = StyleSheet.create({
-  list: { gap: spacing.sm },
-  history: { gap: spacing.md },
-  historyRow: { alignItems: 'center', borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingTop: spacing.md },
+  historyRow: { alignItems: 'center', borderBottomWidth: 1, flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'space-between', minHeight: 64, paddingVertical: spacing.lg },
+  emptyState: { gap: spacing.md, paddingVertical: spacing.xxl },
+  amountInput: { fontSize: 36, lineHeight: 48, minHeight: 72, fontWeight: '400', fontVariant: ['tabular-nums'] },
+  periodTabs: { flexDirection: 'row', borderBottomWidth: 1 },
+  periodTab: { flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 2 },
+  pressed: { opacity: 0.65 },
   formGroup: { gap: spacing.sm },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   createButton: { marginTop: spacing.md },

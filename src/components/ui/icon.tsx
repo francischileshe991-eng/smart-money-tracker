@@ -1,6 +1,6 @@
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
 
-import { colors, type ColorName } from '@/theme';
+import { type ColorName, useThemeColors } from '@/theme';
 
 /**
  * Semantic icon registry. Each entry maps to an SF Symbol on iOS and a Material
@@ -12,6 +12,19 @@ export const ICONS = {
   add: { ios: 'plus.circle.fill', android: 'add_circle' },
   budgets: { ios: 'chart.pie.fill', android: 'donut_large' },
   profile: { ios: 'person.crop.circle.fill', android: 'person' },
+  profileCircle: { ios: 'person.crop.circle', android: 'account_circle' },
+  profileBadge: { ios: 'person.text.rectangle.fill', android: 'badge' },
+  profileOutline: { ios: 'person.crop.square', android: 'person_outline' },
+  avatarSmile: { ios: 'face.smiling.fill', android: 'sentiment_satisfied' },
+  avatarPaw: { ios: 'pawprint.fill', android: 'pets' },
+  avatarRabbit: { ios: 'hare.fill', android: 'cruelty_free' },
+  avatarLeaf: { ios: 'leaf.fill', android: 'eco' },
+  avatarFlower: { ios: 'camera.macro', android: 'local_florist' },
+  avatarStar: { ios: 'star.fill', android: 'star' },
+  avatarHeart: { ios: 'heart.fill', android: 'favorite' },
+  avatarMountain: { ios: 'mountain.2.fill', android: 'landscape' },
+  avatarTravel: { ios: 'airplane', android: 'flight' },
+  avatarMusic: { ios: 'music.note', android: 'music_note' },
   search: { ios: 'magnifyingglass', android: 'search' },
   filter: { ios: 'line.3.horizontal.decrease', android: 'filter_list' },
   sort: { ios: 'arrow.up.arrow.down', android: 'sort' },
@@ -32,6 +45,9 @@ export const ICONS = {
   reset: { ios: 'arrow.clockwise', android: 'refresh' },
   shield: { ios: 'shield.fill', android: 'shield' },
   delete: { ios: 'trash.fill', android: 'delete' },
+  calculator: { ios: 'square.grid.2x2.fill', android: 'calculate' },
+  lightMode: { ios: 'sun.max.fill', android: 'light_mode' },
+  darkMode: { ios: 'moon.fill', android: 'dark_mode' },
 
   // Expense categories
   food: { ios: 'fork.knife', android: 'restaurant' },
@@ -67,6 +83,7 @@ type IconProps = {
 };
 
 export function Icon({ name, size = 20, color = 'textSecondary', weight, style }: IconProps) {
+  const colors = useThemeColors();
   const symbol = ICONS[name];
 
   return (

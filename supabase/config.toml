@@ -9,6 +9,8 @@ site_url = "http://localhost:8081/auth"
 additional_redirect_urls = [
   "smartmoneytracker://auth",
   "smartmoneytracker://reset-password",
+  "smartmoneytracker:///auth",
+  "smartmoneytracker:///reset-password",
   "http://localhost:8081/auth",
   "http://localhost:8081/reset-password",
 ]
@@ -16,4 +18,8 @@ enable_signup = true
 
 [auth.email]
 enabled = true
-enable_confirmations = false
+enable_confirmations = true
+
+[functions.delete-account]
+# The handler validates the bearer token with Auth.getUser itself, including new signing keys.
+verify_jwt = false

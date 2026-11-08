@@ -1,38 +1,74 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { router } from 'expo-router';
+import type { TextInputInstance } from 'react-native';
+
+import { AuthLayout } from '@/components/auth/auth-layout';
+import { PasswordField } from '@/components/auth/password-field';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Screen } from '@/components/ui/screen';
-import { ScreenHeader } from '@/components/ui/screen-header';
-import { TextField } from '@/components/ui/text-field';
 import { useAuth } from '@/providers/auth-provider';
-import { spacing } from '@/theme';
+import { authErrorFeedback, validatePasswordReset } from '@/utils/auth-form';
 
 export default function ResetPasswordScreen() {
-  const { updatePassword } = useAuth();
+  const { updatePassword, passwordRecovery, finishPasswordRecovery, signOut } = useAuth();
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ password?: string; confirmation?: string }>({});
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
+  const submitting = useRef(false);
+  const passwordRef = useRef<TextInputInstance>(null);
+  const confirmationRef = useRef<TextInputInstance>(null);
+
   async function submit() {
+    if (submitting.current || saved) return;
     setError('');
-    if (password.length < 8) return setError('Use a password with at least 8 characters.');
-    if (password !== confirmation) return setError('The passwords do not match.');
+    const errors = validatePasswordReset(password, confirmation);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      if (errors.password) passwordRef.current?.focus();
+      else confirmationRef.current?.focus();
+      return;
+    }
+    submitting.current = true;
     setBusy(true);
-    try { await updatePassword(password); setSaved(true); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : 'Could not update your password.'); }
-    finally { setBusy(false); }
+    try {
+      await updatePassword(password);
+      setSaved(true);
+      setPassword('');
+      setConfirmation('');
+    } catch (cause) {
+      const feedback = authErrorFeedback(cause);
+      if (feedback.field === 'password') setFieldErrors({ password: feedback.message });
+      else setError(feedback.message);
+    } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
   }
-  return <Screen>
-    <ScreenHeader title="Choose a new password" subtitle="Use at least 8 characters." />
-    <Card style={{ gap: spacing.lg }}>
-      <TextField label="New password" secureTextEntry value={password} onChangeText={setPassword} />
-      <TextField label="Confirm password" secureTextEntry value={confirmation} onChangeText={setConfirmation} />
-      {error ? <AppText color="expense">{error}</AppText> : null}
-      {saved ? <AppText color="income">Password updated successfully.</AppText> : null}
-      <Button fullWidth disabled={busy} label={saved ? 'Done' : busy ? 'Saving…' : 'Update password'} onPress={() => saved ? router.replace('/') : void submit()} />
-    </Card>
-  </Screen>;
+
+  return <AuthLayout title={saved ? 'Password updated' : 'Choose a new password'}>
+    {saved ? <>
+      <AppText color="textSecondary" accessibilityLiveRegion="polite">Your new password is ready to use.</AppText>
+      <Button fullWidth label="Done" onPress={() => {
+        if (passwordRecovery) finishPasswordRecovery();
+        else router.replace('/');
+      }} />
+    </> : <>
+      <PasswordField label="New password" inputRef={passwordRef} editable={!busy} autoComplete="new-password" importantForAutofill="yes"
+        hint="At least 8 characters." value={password} error={fieldErrors.password}
+        onChangeText={(value) => { setPassword(value); setFieldErrors({}); setError(''); }}
+        returnKeyType="next" submitBehavior="submit" onSubmitEditing={() => confirmationRef.current?.focus()} />
+      <PasswordField label="Confirm password" inputRef={confirmationRef} editable={!busy} autoComplete="new-password" importantForAutofill="yes"
+        value={confirmation} error={fieldErrors.confirmation}
+        onChangeText={(value) => { setConfirmation(value); setFieldErrors((previous) => ({ password: previous.password })); setError(''); }}
+        returnKeyType="done" submitBehavior="submit" onSubmitEditing={() => void submit()} />
+      {error ? <AppText color="expense" accessibilityLiveRegion="polite">{error}</AppText> : null}
+      <Button fullWidth disabled={busy} label={busy ? 'Saving…' : 'Update password'} onPress={() => void submit()}
+        accessibilityState={{ disabled: busy, busy }} />
+      {passwordRecovery ? <Button label="Cancel and sign out" variant="ghost" disabled={busy}
+        onPress={() => { void signOut().catch(() => setError('Could not sign out. Please try again.')); }} /> : null}
+    </>}
+  </AuthLayout>;
 }

@@ -1,7 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from './app-text';
-import { Icon } from './icon';
 
 import { spacing } from '@/theme';
 
@@ -27,7 +26,6 @@ export function SectionHeader({ title, actionLabel, onAction }: SectionHeaderPro
           <AppText variant="link" color="primary">
             {actionLabel}
           </AppText>
-          <Icon name="chevronRight" size={13} color="primary" />
         </Pressable>
       ) : null}
     </View>
@@ -40,12 +38,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing.md,
-    marginTop: spacing.xxl,
+    marginTop: spacing.xxxl,
   },
   action: {
     alignItems: 'center',
     flexDirection: 'row',
     gap: spacing.xs,
+    minHeight: 44,
   },
   pressed: {
     opacity: 0.65,

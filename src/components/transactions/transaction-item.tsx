@@ -1,10 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { Icon } from '@/components/ui/icon';
-
-import { getCategoryIcon } from '@/data/categories';
-import { colors, radii, spacing } from '@/theme';
+import { spacing, useThemeColors } from '@/theme';
 import type { Transaction } from '@/types/finance';
 import { formatMoney, formatSignedMoney } from '@/utils/currency';
 import { formatTransactionDate } from '@/utils/date';
@@ -21,15 +18,17 @@ export function TransactionItem({
   accountLabel,
   onPress,
 }: TransactionItemProps) {
+  const colors = useThemeColors();
   const isIncome = transaction.type === 'income';
   const isTransfer = transaction.type === 'transfer';
   const formattedAmount = isTransfer
     ? formatMoney(transaction.amountMinor)
     : formatSignedMoney(transaction.amountMinor, transaction.type);
-  const amountColor = isTransfer ? 'text' : isIncome ? 'income' : 'expense';
+  const amountColor = isIncome ? 'income' : 'text';
   const details = isTransfer
     ? accountLabel ?? 'Transfer'
-    : [transaction.category, accountLabel].filter(Boolean).join(' · ');
+    : [transaction.category === transaction.title ? undefined : transaction.category, accountLabel].filter(Boolean).join(' · ')
+      || (isIncome ? 'Income' : 'Expense');
   const typeLabel = isTransfer ? 'Transfer' : isIncome ? 'Income' : 'Expense';
 
   return (
@@ -40,27 +39,8 @@ export function TransactionItem({
       accessibilityRole={onPress ? 'button' : undefined}
       disabled={!onPress}
       onPress={onPress}
-      style={({ pressed }) => [styles.container, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.container, { backgroundColor: colors.surface, borderColor: colors.border }, pressed && styles.pressed]}
     >
-      <View
-        style={[
-          styles.iconWrap,
-          {
-            backgroundColor: isTransfer
-              ? colors.primarySoft
-              : isIncome
-                ? colors.incomeSoft
-                : colors.expenseSoft,
-          },
-        ]}
-      >
-        <Icon
-          name={isTransfer ? 'transfer' : getCategoryIcon(transaction.category)}
-          size={19}
-          color={isTransfer ? 'primary' : isIncome ? 'income' : 'expense'}
-        />
-      </View>
-
       <View style={styles.details}>
         <AppText numberOfLines={1} variant="bodyStrong">
           {transaction.title}
@@ -79,7 +59,6 @@ export function TransactionItem({
         </AppText>
       </View>
 
-      {onPress ? <Icon name="chevronRight" size={14} color="textMuted" /> : null}
     </Pressable>
   );
 }
@@ -87,24 +66,14 @@ export function TransactionItem({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    borderWidth: 1,
+    borderBottomWidth: 1,
     flexDirection: 'row',
     gap: spacing.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+    minHeight: 76,
+    paddingVertical: spacing.lg,
   },
   pressed: {
     opacity: 0.7,
-  },
-  iconWrap: {
-    alignItems: 'center',
-    borderRadius: radii.md,
-    height: 42,
-    justifyContent: 'center',
-    width: 42,
   },
   details: {
     flex: 1,

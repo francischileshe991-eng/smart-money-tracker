@@ -1,35 +1,37 @@
 import { StyleSheet, View, type DimensionValue } from 'react-native';
 
-import { colors, radii } from '@/theme';
+import { radii, useThemeColors } from '@/theme';
 
-export type ProgressTone = 'primary' | 'income' | 'warning' | 'expense';
-
-const TONE_COLORS: Record<ProgressTone, string> = {
-  primary: colors.primary,
-  income: colors.income,
-  warning: colors.warning,
-  expense: colors.expense,
-};
+export type ProgressTone = 'primary' | 'income' | 'mint' | 'warning' | 'expense';
 
 type ProgressBarProps = {
   /** Visual percentage from 0 to 100. */
   progress: number;
   tone?: ProgressTone;
+  size?: 'sm' | 'md';
 };
 
-export function ProgressBar({ progress, tone = 'primary' }: ProgressBarProps) {
+export function ProgressBar({ progress, tone = 'primary', size = 'md' }: ProgressBarProps) {
+  const colors = useThemeColors();
+  const toneColors: Record<ProgressTone, string> = {
+    primary: colors.primary,
+    income: colors.income,
+    mint: colors.mintGreen,
+    warning: colors.warning,
+    expense: colors.expense,
+  };
   const clamped = Math.min(100, Math.max(0, progress));
 
   return (
     <View
       accessibilityRole="progressbar"
       accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped) }}
-      style={styles.track}
+      style={[styles.track, { backgroundColor: colors.surfaceAlt }, size === 'sm' && styles.small]}
     >
       <View
         style={[
           styles.fill,
-          { backgroundColor: TONE_COLORS[tone], width: `${clamped}%` as DimensionValue },
+          { backgroundColor: toneColors[tone], width: `${clamped}%` as DimensionValue },
         ]}
       />
     </View>
@@ -38,7 +40,6 @@ export function ProgressBar({ progress, tone = 'primary' }: ProgressBarProps) {
 
 const styles = StyleSheet.create({
   track: {
-    backgroundColor: colors.surfaceAlt,
     borderRadius: radii.pill,
     height: 8,
     overflow: 'hidden',
@@ -48,4 +49,5 @@ const styles = StyleSheet.create({
     borderRadius: radii.pill,
     height: '100%',
   },
+  small: { height: 3 },
 });

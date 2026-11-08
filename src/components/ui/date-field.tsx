@@ -5,7 +5,7 @@ import { AppText } from './app-text';
 import { Icon } from './icon';
 import { Modal } from './modal';
 
-import { colors, radii, spacing } from '@/theme';
+import { radii, spacing, useThemeColors } from '@/theme';
 import { formatDateLabel, formatLongDate, todayIso } from '@/utils/date';
 
 const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
@@ -44,6 +44,7 @@ function buildMonthCells(year: number, monthIndex: number): (number | null)[] {
 }
 
 export function DateField({ label, value, onChange, error }: DateFieldProps) {
+  const colors = useThemeColors();
   const [open, setOpen] = useState(false);
   const selected = useMemo(() => parseIso(value), [value]);
   const [viewYear, setViewYear] = useState(selected.year);
@@ -85,7 +86,7 @@ export function DateField({ label, value, onChange, error }: DateFieldProps) {
         }}
         style={({ pressed }) => [
           styles.field,
-          error ? styles.fieldError : null,
+          { backgroundColor: colors.surface, borderColor: error ? colors.expense : colors.border },
           pressed && styles.pressed,
         ]}
       >
@@ -109,7 +110,7 @@ export function DateField({ label, value, onChange, error }: DateFieldProps) {
             accessibilityRole="button"
             hitSlop={8}
             onPress={() => changeMonth(-1)}
-            style={({ pressed }) => [styles.monthButton, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.monthButton, { backgroundColor: colors.surfaceAlt }, pressed && styles.pressed]}
           >
             <Icon name="back" size={18} color="textSecondary" />
           </Pressable>
@@ -123,7 +124,7 @@ export function DateField({ label, value, onChange, error }: DateFieldProps) {
             accessibilityRole="button"
             hitSlop={8}
             onPress={() => changeMonth(1)}
-            style={({ pressed }) => [styles.monthButton, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.monthButton, { backgroundColor: colors.surfaceAlt }, pressed && styles.pressed]}
           >
             <Icon name="chevronRight" size={18} color="textSecondary" />
           </Pressable>
@@ -159,8 +160,8 @@ export function DateField({ label, value, onChange, error }: DateFieldProps) {
                 style={({ pressed }) => [
                   styles.dayCell,
                   styles.dayPressable,
-                  isToday && !isSelected && styles.today,
-                  isSelected && styles.selectedDay,
+                  isToday && !isSelected && { borderColor: colors.primaryMuted, borderWidth: 1 },
+                  isSelected && { backgroundColor: colors.primaryButton },
                   pressed && styles.pressed,
                 ]}
               >
@@ -186,17 +187,12 @@ const styles = StyleSheet.create({
   },
   field: {
     alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
     borderRadius: radii.md,
     borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.sm,
     minHeight: 48,
     paddingHorizontal: spacing.md,
-  },
-  fieldError: {
-    borderColor: colors.expense,
   },
   value: {
     flex: 1,
@@ -211,7 +207,6 @@ const styles = StyleSheet.create({
   },
   monthButton: {
     alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
     borderRadius: radii.pill,
     height: 36,
     justifyContent: 'center',
@@ -242,13 +237,6 @@ const styles = StyleSheet.create({
   },
   dayPressable: {
     borderRadius: radii.pill,
-  },
-  today: {
-    borderColor: colors.primaryMuted,
-    borderWidth: 1,
-  },
-  selectedDay: {
-    backgroundColor: colors.primary,
   },
   dayText: {
     textAlign: 'center',

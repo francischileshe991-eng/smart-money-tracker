@@ -4,7 +4,7 @@ import { AppText } from '@/components/ui/app-text';
 import { Icon } from '@/components/ui/icon';
 import { ProgressBar } from '@/components/ui/progress-bar';
 
-import { colors, radii, spacing } from '@/theme';
+import { radii, spacing, useThemeColors } from '@/theme';
 import type { SavingsGoal } from '@/types/finance';
 import { formatMoney, percentageOf } from '@/utils/currency';
 
@@ -13,6 +13,7 @@ type SavingsGoalProgressProps = {
 };
 
 export function SavingsGoalProgress({ goal }: SavingsGoalProgressProps) {
+  const colors = useThemeColors();
   const progress = percentageOf(goal.contributedMinor, goal.targetMinor);
   const isComplete = goal.contributedMinor >= goal.targetMinor;
 
@@ -24,7 +25,7 @@ export function SavingsGoalProgress({ goal }: SavingsGoalProgressProps) {
       )} saved`}
       style={styles.row}
     >
-      <View style={styles.iconWrap}>
+      <View style={[styles.iconWrap, { backgroundColor: colors.primarySoft }]}>
         <Icon name="target" size={17} color={isComplete ? 'income' : 'primary'} />
       </View>
 
@@ -56,7 +57,6 @@ const styles = StyleSheet.create({
   },
   iconWrap: {
     alignItems: 'center',
-    backgroundColor: colors.primarySoft,
     borderRadius: radii.sm,
     height: 32,
     justifyContent: 'center',

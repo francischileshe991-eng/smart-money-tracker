@@ -14,7 +14,7 @@ import { ScreenHeader } from '@/components/ui/screen-header';
 import { SectionHeader } from '@/components/ui/section-header';
 import { accountTypeLabel } from '@/data/accounts';
 import { useFinance } from '@/providers/finance-provider';
-import { colors, spacing } from '@/theme';
+import { spacing } from '@/theme';
 import { formatMoney } from '@/utils/currency';
 import { transactionReferencesAccount } from '@/utils/finance';
 
@@ -46,7 +46,7 @@ export default function AccountDetailsScreen() {
       <Screen>
         <BackLink />
         <EmptyState
-          action={<Button label="Back to accounts" onPress={() => router.replace('/accounts')} />}
+          action={<Button label="Back to accounts" onPress={() => router.dismissTo('/accounts')} />}
           icon="wallet"
           message="This account may have been deleted or reset."
           title="Account not found"
@@ -66,7 +66,7 @@ export default function AccountDetailsScreen() {
     const deleted = deleteAccount(accountId);
     setDeleteConfirmation(false);
     if (deleted) {
-      router.replace('/accounts');
+      router.dismissTo('/accounts');
     }
   }
 
@@ -225,7 +225,6 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   protectionNote: {
-    color: colors.textMuted,
     marginTop: spacing.lg,
     textAlign: 'center',
   },

@@ -3,7 +3,7 @@ import { Pressable, StyleSheet } from 'react-native';
 import { AppText } from './app-text';
 import { Icon, type IconName } from './icon';
 
-import { colors, radii, spacing } from '@/theme';
+import { radii, spacing, useThemeColors } from '@/theme';
 
 export type ChipTone = 'default' | 'income' | 'expense';
 
@@ -16,8 +16,14 @@ type ChipProps = {
 };
 
 export function Chip({ label, active = false, onPress, icon, tone = 'default' }: ChipProps) {
-  const activeColor =
-    tone === 'income' ? colors.income : tone === 'expense' ? colors.expense : colors.primary;
+  const colors = useThemeColors();
+  const activeBackground = tone === 'income'
+    ? colors.incomeSoft
+    : tone === 'expense'
+      ? colors.expenseSoft
+      : colors.primarySoft;
+  const activeText = tone === 'income' ? 'income' : tone === 'expense' ? 'expense' : 'text';
+  const activeBorder = tone === 'income' ? colors.income : tone === 'expense' ? colors.expense : colors.primary;
 
   return (
     <Pressable
@@ -26,14 +32,14 @@ export function Chip({ label, active = false, onPress, icon, tone = 'default' }:
       onPress={onPress}
       style={({ pressed }) => [
         styles.base,
-        active ? { backgroundColor: activeColor, borderColor: activeColor } : styles.inactive,
+        active ? { backgroundColor: activeBackground, borderColor: activeBorder } : [styles.inactive, { backgroundColor: colors.surface, borderColor: colors.border }],
         pressed && styles.pressed,
       ]}
     >
       {icon ? (
-        <Icon name={icon} size={15} color={active ? 'textInverse' : 'textSecondary'} />
+        <Icon name={icon} size={15} color={active ? activeText : 'textSecondary'} />
       ) : null}
-      <AppText variant="captionStrong" color={active ? 'textInverse' : 'textSecondary'}>
+      <AppText variant="captionStrong" color={active ? activeText : 'textSecondary'}>
         {label}
       </AppText>
     </Pressable>
@@ -43,17 +49,15 @@ export function Chip({ label, active = false, onPress, icon, tone = 'default' }:
 const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
-    borderRadius: radii.pill,
+    borderRadius: radii.sm,
     borderWidth: 1,
     flexDirection: 'row',
     gap: spacing.xs,
-    minHeight: 36,
+    minHeight: 44,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   inactive: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
   },
   pressed: {
     opacity: 0.75,

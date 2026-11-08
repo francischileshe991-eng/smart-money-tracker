@@ -1,17 +1,20 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Chip } from '@/components/ui/chip';
 import { DateField } from '@/components/ui/date-field';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Modal } from '@/components/ui/modal';
 import { TextField } from '@/components/ui/text-field';
 import { categoriesFor } from '@/data/categories';
+import { useAuth } from '@/providers/auth-provider';
 import { useFinance } from '@/providers/finance-provider';
-import { spacing } from '@/theme';
+import { spacing, useThemeColors } from '@/theme';
 import type {
   AccountWithBalance,
   Category,
@@ -23,7 +26,8 @@ import type {
 } from '@/types/finance';
 import { formatAmountInput, formatMoney } from '@/utils/currency';
 import { transactionReferencesAccount } from '@/utils/finance';
-import { todayIso } from '@/utils/date';
+import { formatTransactionDate, todayIso } from '@/utils/date';
+import { preferredAccountId, quickCategories } from '@/utils/transaction-shortcuts';
 import {
   validateTransactionInput,
   type TransactionValidationErrors,
@@ -42,11 +46,11 @@ type TransactionFormProps = {
   transaction?: Transaction;
 };
 
-const TYPE_OPTIONS: { label: string; value: TransactionType; tone: 'expense' | 'income' | 'default' }[] =
+const TYPE_OPTIONS: { label: string; value: TransactionType }[] =
   [
-    { label: 'Expense', value: 'expense', tone: 'expense' },
-    { label: 'Income', value: 'income', tone: 'income' },
-    { label: 'Transfer', value: 'transfer', tone: 'default' },
+    { label: 'Expense', value: 'expense' },
+    { label: 'Income', value: 'income' },
+    { label: 'Transfer', value: 'transfer' },
   ];
 
 function categoryForType(type: TransactionType): Category {
@@ -97,7 +101,11 @@ export function TransactionForm({
   initialFromAccountId,
   transaction,
 }: TransactionFormProps) {
-  const { accounts, allAccounts, addTransaction, updateTransaction } = useFinance();
+  const colors = useThemeColors();
+  const { accounts, allAccounts, transactions, addTransaction, updateTransaction } = useFinance();
+  const { user } = useAuth();
+  const accountTouched = useRef(false);
+  const preferenceKey = user ? `smart-money-tracker:last-transaction-account:${user.id}` : null;
   const resolvedType = transaction?.type ?? initialType;
   const fallbackAccountId = accounts[0]?.id ?? '';
   const accountOptions = transaction
@@ -140,16 +148,40 @@ export function TransactionForm({
   const [errors, setErrors] = useState<TransactionValidationErrors>({});
   const [saved, setSaved] = useState<SavedTransaction | null>(null);
   const [submissionError, setSubmissionError] = useState<string>();
+  const [showAllCategories, setShowAllCategories] = useState(mode === 'edit');
+  const [showDetails, setShowDetails] = useState(mode === 'edit');
+
+  useEffect(() => {
+    if (mode !== 'create' || !preferenceKey) return;
+    let active = true;
+    void AsyncStorage.getItem(preferenceKey).then((rememberedId) => {
+      if (!active || accountTouched.current) return;
+      setAccountId(preferredAccountId(accounts, rememberedId));
+      const sourceId = preferredAccountId(accounts, rememberedId, initialFromAccountId);
+      setFromAccountId(sourceId);
+      setToAccountId(accounts.find((account) => account.id !== sourceId)?.id ?? '');
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [accounts, initialFromAccountId, mode, preferenceKey]);
+
+  const suggestedCategories = useMemo(
+    () => type === 'transfer' ? [] : quickCategories(transactions, type, categoriesFor(type)),
+    [transactions, type]
+  );
 
   const categories = type === 'transfer' ? [] : categoriesFor(type);
+  const visibleCategories = showAllCategories ? categories
+    : suggestedCategories.includes(category) ? suggestedCategories : [...suggestedCategories, category];
   const selectedAccount = accountOptions.find(
     (account) => account.id === (type === 'transfer' ? fromAccountId : accountId)
   );
 
   function selectType(nextType: TransactionType) {
+    if (nextType === type) return;
     setType(nextType);
     setErrors({});
     setSubmissionError(undefined);
+    setShowAllCategories(mode === 'edit');
 
     if (nextType !== 'transfer') {
       setCategory(categoriesFor(nextType)[0]);
@@ -168,9 +200,7 @@ export function TransactionForm({
     setNote('');
     setDate(todayIso());
     setCategory(categoryForType(type));
-    setAccountId(accounts[0]?.id ?? '');
-    setFromAccountId(preferredFromAccountId);
-    setToAccountId(preferredToAccountId);
+    setShowDetails(false);
     setErrors({});
   }
 
@@ -180,7 +210,7 @@ export function TransactionForm({
     const result = validateTransactionInput({
       type,
       amount,
-      title,
+      title: title.trim() || (type === 'transfer' ? 'Account transfer' : category),
       category,
       date,
       accountId,
@@ -192,6 +222,7 @@ export function TransactionForm({
     setErrors(result.errors);
 
     if (Object.keys(result.errors).length > 0 || result.amountMinor === null) {
+      if (result.errors.date || result.errors.title) setShowDetails(true);
       return;
     }
 
@@ -244,6 +275,14 @@ export function TransactionForm({
     setSaved({ amountMinor, type });
 
     if (mode === 'create') {
+      accountTouched.current = true;
+      if (preferenceKey) {
+        // Preferences are optional; a storage failure must not undo a valid transaction.
+        void AsyncStorage.setItem(preferenceKey, type === 'transfer' ? fromAccountId : accountId).catch(() => {});
+      }
+    }
+
+    if (mode === 'create') {
       resetForm();
     }
   }
@@ -272,23 +311,41 @@ export function TransactionForm({
     saved?.type === 'transfer' ? 'Transfer' : saved?.type === 'income' ? 'Income' : 'Expense';
   const actionLabel = mode === 'edit' ? 'Update transaction' : `Save ${type}`;
 
+  if (mode === 'create' && accounts.length === 0) {
+    return <Card><EmptyState icon="wallet" title="Add an account first"
+      message="Choose where your money is kept before recording a transaction."
+      action={<Button label="Set up an account" icon="add" onPress={() => router.navigate('/accounts')} />} /></Card>;
+  }
+
   return (
     <View style={styles.container}>
-      <Card style={styles.formCard}>
+      <View style={styles.formCard}>
+        <TextField
+          error={errors.amount}
+          keyboardType="decimal-pad"
+          label="Amount"
+          onChangeText={setAmount}
+          placeholder="0.00"
+          trailingText="ZMW"
+          value={amount}
+          style={styles.amountInput}
+          variant="underlined"
+        />
         <View style={styles.fieldGroup}>
-          <AppText variant="label" color="textSecondary">
-            Type
-          </AppText>
-          <View style={styles.chipRow}>
+          <View style={[styles.typeTabs, { borderBottomColor: colors.border }]}>
             {TYPE_OPTIONS.map((option) => (
-              <Chip
-                active={type === option.value}
-                icon={option.value === 'transfer' ? 'transfer' : option.value}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ selected: type === option.value }}
                 key={option.value}
-                label={option.label}
                 onPress={() => selectType(option.value)}
-                tone={option.tone}
-              />
+                style={({ pressed }) => [styles.typeTab,
+                  { borderBottomColor: type === option.value ? colors.text : 'transparent' },
+                  pressed && { opacity: 0.6 }]}
+              >
+                <AppText variant={type === option.value ? 'bodyStrong' : 'body'}
+                  color={type === option.value ? 'text' : 'textSecondary'}>{option.label}</AppText>
+              </Pressable>
             ))}
           </View>
           {type === 'transfer' ? (
@@ -298,38 +355,13 @@ export function TransactionForm({
           ) : null}
         </View>
 
-        <TextField
-          error={errors.amount}
-          keyboardType="decimal-pad"
-          label="Amount"
-          onChangeText={setAmount}
-          placeholder="0.00"
-          trailingText="ZMW"
-          value={amount}
-        />
-
-        <TextField
-          error={errors.title}
-          label="Description"
-          maxLength={60}
-          onChangeText={setTitle}
-          placeholder={
-            type === 'transfer'
-              ? 'e.g. Move money to mobile money'
-              : type === 'income'
-                ? 'e.g. Monthly salary'
-                : 'e.g. Weekly groceries'
-          }
-          value={title}
-        />
-
         {type !== 'transfer' ? (
           <View style={styles.fieldGroup}>
             <AppText variant="label" color="textSecondary">
               Category
             </AppText>
             <View style={styles.chipRow}>
-              {categories.map((option) => (
+              {visibleCategories.map((option) => (
                 <Chip
                   active={category === option}
                   key={option}
@@ -338,6 +370,10 @@ export function TransactionForm({
                 />
               ))}
             </View>
+            <Pressable accessibilityRole="button" accessibilityState={{ expanded: showAllCategories }}
+              onPress={() => setShowAllCategories((expanded) => !expanded)} style={styles.textAction}>
+              <AppText variant="link" color="primary">{showAllCategories ? 'Show less' : 'All categories'}</AppText>
+            </Pressable>
             {errors.category ? (
               <AppText variant="caption" color="expense">
                 {errors.category}
@@ -357,14 +393,18 @@ export function TransactionForm({
                   : undefined
               }
               label="From account"
-              onSelect={setFromAccountId}
+              onSelect={(id) => {
+                accountTouched.current = true;
+                setFromAccountId(id);
+                if (id === toAccountId) setToAccountId(accountOptions.find((account) => account.id !== id)?.id ?? '');
+              }}
               selectedId={fromAccountId}
             />
             <AccountChips
               accounts={accountOptions}
               error={errors.toAccount}
               label="To account"
-              onSelect={setToAccountId}
+              onSelect={(id) => { accountTouched.current = true; setToAccountId(id); }}
               selectedId={toAccountId}
             />
           </>
@@ -374,25 +414,28 @@ export function TransactionForm({
             error={errors.account}
             hint={selectedAccount ? `${formatMoney(selectedAccount.balanceMinor)} available` : undefined}
             label="Account"
-            onSelect={setAccountId}
+            onSelect={(id) => { accountTouched.current = true; setAccountId(id); }}
             selectedId={accountId}
           />
         )}
 
-        <DateField error={errors.date} label="Date" onChange={setDate} value={date} />
-
-        <TextField
-          label="Note (optional)"
-          multiline
-          onChangeText={setNote}
-          placeholder="Add context for this transaction"
-          value={note}
-        />
-      </Card>
+        <Button label={showDetails ? 'Hide details' : `${formatTransactionDate(date)} · Add details`}
+          variant="ghost" size="sm"
+          accessibilityState={{ expanded: showDetails }} onPress={() => setShowDetails((expanded) => !expanded)} />
+        {showDetails ? <>
+          <TextField error={errors.title} label="Description (optional)" maxLength={60}
+            onChangeText={setTitle} placeholder={type === 'transfer' ? 'Account transfer' : category} value={title} />
+          <DateField error={errors.date} label="Date" onChange={setDate} value={date} />
+          <TextField label="Note (optional)" multiline onChangeText={setNote}
+            placeholder="Add context for this transaction" value={note} />
+        </> : null}
+        {type === 'transfer' && accountOptions.length < 2 ?
+          <Button label="Add another account to transfer" variant="secondary" onPress={() => router.navigate('/accounts/manage')} /> : null}
+      </View>
 
       <Button
         fullWidth
-        icon="check"
+        disabled={mode === 'create' && type === 'transfer' && accountOptions.length < 2}
         label={actionLabel}
         onPress={handleSubmit}
         style={styles.submitButton}
@@ -446,8 +489,19 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   formCard: {
-    gap: spacing.lg,
+    gap: spacing.xxl,
   },
+  amountInput: {
+    fontSize: 44,
+    fontWeight: '400',
+    lineHeight: 56,
+    minHeight: 80,
+    letterSpacing: -1,
+    fontVariant: ['tabular-nums'],
+  },
+  typeTabs: { flexDirection: 'row', borderBottomWidth: 1 },
+  typeTab: { flex: 1, alignItems: 'center', minHeight: 48, justifyContent: 'center', borderBottomWidth: 2 },
+  textAction: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   fieldGroup: {
     gap: spacing.sm,
   },

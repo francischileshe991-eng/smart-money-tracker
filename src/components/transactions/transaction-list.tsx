@@ -6,7 +6,6 @@ import { useFinance } from '@/providers/finance-provider';
 
 import { TransactionItem } from './transaction-item';
 
-import { spacing } from '@/theme';
 import type { Transaction } from '@/types/finance';
 import { transactionAccountLabel } from '@/utils/transaction-query';
 
@@ -49,6 +48,6 @@ export function TransactionList({
 
 const styles = StyleSheet.create({
   list: {
-    gap: spacing.sm,
+    gap: 0,
   },
 });

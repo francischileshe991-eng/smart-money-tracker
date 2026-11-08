@@ -6,15 +6,22 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "smartmoneytracker",
-    "userInterfaceStyle": "light",
-    "backgroundColor": "#F4F6F3",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#FFFFFF",
     "android": {
+      "package": "com.smartmoneytracker.app",
       "adaptiveIcon": {
-        "backgroundColor": "#1B4332",
+        "backgroundColor": "#123D30",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false
+    },
+    "ios": {
+      "bundleIdentifier": "com.smartmoneytracker.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "web": {
       "output": "server",
@@ -25,15 +32,27 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#1B4332",
+          "backgroundColor": "#123D30",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 128
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "9ccfb4bc-592d-45c5-aae7-33846fbfa95f"
+      }
+    },
+    "owner": "chileshe_francis"
   }
 }

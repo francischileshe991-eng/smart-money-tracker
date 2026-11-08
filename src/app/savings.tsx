@@ -12,7 +12,7 @@ import { ScreenHeader } from '@/components/ui/screen-header';
 import { SectionHeader } from '@/components/ui/section-header';
 import { TextField } from '@/components/ui/text-field';
 import { useFinance } from '@/providers/finance-provider';
-import { colors, spacing } from '@/theme';
+import { spacing, useThemeColors } from '@/theme';
 import type { SavingsGoal } from '@/types/finance';
 import { formatAmountInput, formatMoney, parseAmountToMinor } from '@/utils/currency';
 import { isValidIsoDate } from '@/utils/date';
@@ -20,6 +20,7 @@ import { isValidIsoDate } from '@/utils/date';
 type ModalMode = 'goal' | 'contribution' | 'withdrawal' | 'delete' | null;
 
 export default function SavingsScreen() {
+  const colors = useThemeColors();
   const { savingsGoals, saveGoal, deleteGoal, recordGoalContribution, setGoalCompleted } = useFinance();
   const [selected, setSelected] = useState<SavingsGoal | null>(null);
   const [mode, setMode] = useState<ModalMode>(null);
@@ -58,7 +59,7 @@ export default function SavingsScreen() {
   return (
     <Screen>
       <BackLink />
-      <ScreenHeader subtitle="Plan, contribute, and track your progress" title="Savings goals" />
+      <ScreenHeader title="Savings goals" />
       <SectionHeader title="Your goals" actionLabel="New goal" onAction={createGoal} />
       {savingsGoals.length ? <View style={styles.list}>{savingsGoals.map((goal) => <Pressable key={goal.id} accessibilityRole="button" onPress={() => setSelected(goal)}><Card style={styles.goalCard}><SavingsGoalProgress goal={goal} />{goal.targetDate ? <AppText variant="caption" color="textMuted">Target date: {goal.targetDate}</AppText> : null}{goal.completed ? <AppText variant="captionStrong" color="income">Completed</AppText> : null}</Card></Pressable>)}</View> : <Card><AppText variant="body" color="textSecondary">Create a savings goal and track contributions over time.</AppText><Button label="Create a goal" onPress={createGoal} style={styles.gapTop} /></Card>}
       <Card style={styles.note}><AppText variant="caption" color="textSecondary">Goal contributions are tracked separately from account transactions. They only affect account balances when you record a real expense or transfer.</AppText></Card>
@@ -82,7 +83,7 @@ export default function SavingsScreen() {
           {currentGoal.targetDate ? <AppText variant="caption" color="textMuted">Target date: {currentGoal.targetDate}</AppText> : null}
           <View style={styles.actions}><Button label="Contribute" onPress={() => openActivity('contribution')} /><Button label="Withdraw" onPress={() => openActivity('withdrawal')} variant="secondary" /></View>
           <SectionHeader title="Contribution history" />
-          {currentGoal.history?.length ? [...currentGoal.history].reverse().map((event) => <View key={event.id} style={styles.historyRow}><View><AppText variant="bodyStrong">{event.type === 'contribution' ? 'Contribution' : 'Withdrawal'}</AppText><AppText variant="caption" color="textMuted">{event.date}</AppText></View><AppText variant="bodyStrong" color={event.type === 'contribution' ? 'income' : 'expense'}>{event.type === 'contribution' ? '+' : '−'}{formatMoney(event.amountMinor)}</AppText></View>) : <AppText variant="caption" color="textMuted">No contributions recorded yet.</AppText>}
+          {currentGoal.history?.length ? [...currentGoal.history].reverse().map((event) => <View key={event.id} style={[styles.historyRow, { borderTopColor: colors.border }]}><View><AppText variant="bodyStrong">{event.type === 'contribution' ? 'Contribution' : 'Withdrawal'}</AppText><AppText variant="caption" color="textMuted">{event.date}</AppText></View><AppText variant="bodyStrong" color={event.type === 'contribution' ? 'income' : 'expense'}>{event.type === 'contribution' ? '+' : '−'}{formatMoney(event.amountMinor)}</AppText></View>) : <AppText variant="caption" color="textMuted">No contributions recorded yet.</AppText>}
           <Button label="Delete goal" onPress={() => setMode('delete')} variant="danger" />
         </> : null}
       </Modal>
@@ -125,5 +126,5 @@ const styles = StyleSheet.create({
   gapTop: { marginTop: spacing.md },
   actions: { flexDirection: 'row', gap: spacing.sm },
   modalAction: { flex: 1 },
-  historyRow: { alignItems: 'center', borderTopColor: colors.border, borderTopWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md },
+  historyRow: { alignItems: 'center', borderTopWidth: 1, flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.md },
 });

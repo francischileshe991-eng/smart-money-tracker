@@ -26,7 +26,7 @@ export default function ManageAccountScreen() {
       <Screen>
         <BackLink />
         <ScreenHeader subtitle="This account is no longer available." title="Account not found" />
-        <Button label="Back to accounts" onPress={() => router.replace('/accounts')} />
+        <Button label="Back to accounts" onPress={() => router.dismissTo('/accounts')} />
       </Screen>
     );
   }
@@ -79,7 +79,8 @@ function AccountForm({ account, onCreate, onUpdate }: AccountFormProps) {
     }
 
     onCreate(accountValues);
-    router.replace('/accounts');
+    // Return to the existing list instead of stacking a duplicate after every save.
+    router.dismissTo('/accounts');
   }
 
   return (

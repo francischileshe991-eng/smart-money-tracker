@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { Modal as RNModal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Modal as RNModal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from './app-text';
 import { Icon } from './icon';
 
-import { colors, radii, shadows, spacing } from '@/theme';
+import { radii, shadows, spacing, useThemeColors } from '@/theme';
 
 type ModalProps = {
   visible: boolean;
@@ -25,9 +25,13 @@ export function Modal({
   description,
   children,
   actions,
-  scrollable = false,
+  scrollable = true,
 }: ModalProps) {
   const insets = useSafeAreaInsets();
+  const colors = useThemeColors();
+  const { height: windowHeight } = useWindowDimensions();
+  const bottomInset = Math.max(insets.bottom, spacing.xxl);
+  const maxSheetHeight = Math.max(0, windowHeight - insets.top - bottomInset - spacing.lg);
 
   return (
     <RNModal
@@ -37,7 +41,7 @@ export function Modal({
       transparent
       visible={visible}
     >
-      <View accessibilityViewIsModal style={styles.overlay}>
+      <View accessibilityViewIsModal style={[styles.overlay, { backgroundColor: colors.overlay }]}>
         <Pressable
           accessibilityLabel="Close dialog"
           accessibilityRole="button"
@@ -45,8 +49,8 @@ export function Modal({
           style={StyleSheet.absoluteFill}
         />
 
-        <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, spacing.xxl) }]}>
-          <View style={styles.sheet}>
+        <View style={[styles.wrapper, { maxHeight: maxSheetHeight + bottomInset, paddingBottom: bottomInset }]}>
+          <View style={[styles.sheet, { backgroundColor: colors.surface, maxHeight: maxSheetHeight }]}>
             <View style={styles.header}>
               <View style={styles.headerText}>
                 <AppText variant="h2">{title}</AppText>
@@ -62,7 +66,7 @@ export function Modal({
                 accessibilityRole="button"
                 hitSlop={8}
                 onPress={onClose}
-                style={styles.closeButton}
+                style={[styles.closeButton, { backgroundColor: colors.surfaceAlt }]}
               >
                 <Icon name="close" size={18} color="textSecondary" />
               </Pressable>
@@ -93,19 +97,19 @@ export function Modal({
 
 const styles = StyleSheet.create({
   overlay: {
-    backgroundColor: colors.overlay,
     flex: 1,
     justifyContent: 'flex-end',
   },
   wrapper: {
+    alignSelf: 'center',
     paddingHorizontal: spacing.lg,
+    width: '100%',
   },
   sheet: {
     alignSelf: 'center',
-    backgroundColor: colors.surface,
     borderRadius: radii.xl,
-    maxHeight: '88%',
     maxWidth: 520,
+    overflow: 'hidden',
     padding: spacing.xl,
     width: '100%',
     ...shadows.sheet,
@@ -118,10 +122,10 @@ const styles = StyleSheet.create({
   headerText: {
     flex: 1,
     gap: spacing.xs,
+    minWidth: 0,
   },
   closeButton: {
     alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
     borderRadius: radii.pill,
     height: 32,
     justifyContent: 'center',
@@ -129,14 +133,18 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexShrink: 1,
+    minHeight: 0,
   },
   content: {
     gap: spacing.md,
     marginTop: spacing.lg,
+    minWidth: 0,
+    paddingBottom: spacing.xs,
   },
   actions: {
     flexDirection: 'row',
     gap: spacing.sm,
     marginTop: spacing.xxl,
+    maxWidth: '100%',
   },
 });

@@ -9,9 +9,9 @@ import {
 import { AppText } from './app-text';
 import { Icon, type IconName } from './icon';
 
-import { colors, radii, spacing, type ColorName } from '@/theme';
+import { radii, spacing, type ColorName, useThemeColors } from '@/theme';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 export type ButtonSize = 'md' | 'sm';
 
 type ButtonVariantConfig = {
@@ -22,24 +22,29 @@ type ButtonVariantConfig = {
 
 const VARIANTS: Record<ButtonVariant, ButtonVariantConfig> = {
   primary: {
-    backgroundColor: 'primary',
-    textColor: 'textInverse',
-    borderColor: 'primary',
+    backgroundColor: 'surface',
+    textColor: 'text',
+    borderColor: 'borderStrong',
   },
   secondary: {
-    backgroundColor: 'primarySoft',
-    textColor: 'primary',
-    borderColor: 'primarySoft',
+    backgroundColor: 'surface',
+    textColor: 'text',
+    borderColor: 'borderStrong',
   },
   ghost: {
     backgroundColor: 'surface',
-    textColor: 'text',
+    textColor: 'primary',
     borderColor: 'border',
   },
+  outline: {
+    backgroundColor: 'surface',
+    textColor: 'text',
+    borderColor: 'borderStrong',
+  },
   danger: {
-    backgroundColor: 'expenseSoft',
+    backgroundColor: 'surface',
     textColor: 'expense',
-    borderColor: 'expenseSoft',
+    borderColor: 'expense',
   },
 };
 
@@ -54,7 +59,7 @@ export type ButtonProps = Omit<PressableProps, 'children' | 'style'> & {
 
 export function Button({
   label,
-  variant = 'primary',
+  variant = 'outline',
   size = 'md',
   icon,
   fullWidth = false,
@@ -62,6 +67,7 @@ export function Button({
   style,
   ...rest
 }: ButtonProps) {
+  const colors = useThemeColors();
   const config = VARIANTS[variant];
 
   return (
@@ -76,6 +82,8 @@ export function Button({
           backgroundColor: colors[config.backgroundColor],
           borderColor: colors[config.borderColor],
         },
+        variant === 'ghost' && { backgroundColor: 'transparent', borderColor: 'transparent' },
+        variant !== 'ghost' && { backgroundColor: 'transparent' },
         fullWidth && styles.fullWidth,
         pressed && !disabled && styles.pressed,
         disabled && styles.disabled,
@@ -84,7 +92,7 @@ export function Button({
       {...rest}
     >
       {icon ? <Icon name={icon} size={size === 'sm' ? 16 : 18} color={config.textColor} /> : null}
-      <AppText variant={size === 'sm' ? 'captionStrong' : 'button'} color={config.textColor}>
+      <AppText variant={variant === 'ghost' ? 'link' : size === 'sm' ? 'captionStrong' : 'button'} color={config.textColor}>
         {label}
       </AppText>
     </Pressable>

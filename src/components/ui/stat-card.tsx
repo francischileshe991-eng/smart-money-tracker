@@ -4,7 +4,7 @@ import { AppText } from './app-text';
 import { Card } from './card';
 import { Icon, type IconName } from './icon';
 
-import { colors, radii, spacing } from '@/theme';
+import { spacing, useThemeColors } from '@/theme';
 
 type StatCardProps = {
   label: string;
@@ -15,17 +15,15 @@ type StatCardProps = {
 };
 
 export function StatCard({ label, value, caption, icon, tone }: StatCardProps) {
+  const colors = useThemeColors();
   const toneColor = tone === 'income' ? colors.income : colors.expense;
-  const toneBackground = tone === 'income' ? colors.incomeSoft : colors.expenseSoft;
 
   return (
     <Card style={styles.card}>
-      <View style={[styles.iconWrap, { backgroundColor: toneBackground }]}>
-        <Icon name={icon} size={18} color={tone} />
+      <View style={styles.labelRow}>
+        <Icon name={icon} size={15} color="textSecondary" />
+        <AppText variant="caption" color="textSecondary">{label}</AppText>
       </View>
-      <AppText variant="caption" color="textSecondary">
-        {label}
-      </AppText>
       <AppText variant="amountSmall" style={{ color: toneColor }}>
         {value}
       </AppText>
@@ -44,12 +42,11 @@ const styles = StyleSheet.create({
     gap: spacing.xs,
     minWidth: 0,
   },
-  iconWrap: {
+  labelRow: {
     alignItems: 'center',
-    borderRadius: radii.pill,
-    height: 34,
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-    width: 34,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
   },
 });
